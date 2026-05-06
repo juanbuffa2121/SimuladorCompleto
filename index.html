@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador de Instalaciones · Transformación de la Energía</title>
+<title>Editor de Instalaciones · Transformación de la Energía</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -17,15 +17,21 @@
   --a: #f0843d; --a-2: #ffac6f; --a-3: #ffd2a8;
   --a-d: rgba(240,132,61,0.12); --a-d2: rgba(240,132,61,0.22); --a-d3: rgba(240,132,61,0.04);
   --ok: #4ade80; --warn: #fbbf24; --err: #f87171; --info: #60a5fa; --purp: #c084f5;
+  --grid: rgba(255,255,255,0.04);
+  --grid-2: rgba(255,255,255,0.08);
   --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 20px;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme="light"] {
   --bg: #faf8f3; --bg-1: #f4f1e8; --bg-2: #ffffff; --bg-3: #fbf9f3; --bg-4: #ede8d8;
   --b-1: rgba(0,0,0,0.06); --b-2: rgba(0,0,0,0.10); --b-3: rgba(0,0,0,0.20);
   --t-1: #1a1d24; --t-2: #525766; --t-3: #818794; --t-4: #b0b5c0;
-  --a: #c66020; --a-2: #e87a30;
+  --a: #c66020; --a-2: #e87a30; --a-3: #f0a570;
+  --a-d: rgba(198,96,32,0.10); --a-d2: rgba(198,96,32,0.18); --a-d3: rgba(198,96,32,0.04);
+  --grid: rgba(0,0,0,0.05);
+  --grid-2: rgba(0,0,0,0.09);
 }
 
 html { scroll-behavior: smooth; }
@@ -34,1319 +40,1369 @@ body {
   background: var(--bg); color: var(--t-1);
   font-size: 15px; line-height: 1.6; min-height: 100vh;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  transition: background 0.3s, color 0.3s;
+  overflow-x: hidden;
 }
 body::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background: radial-gradient(ellipse 80% 50% at 15% 0%, rgba(240,132,61,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 85% 100%, rgba(95,208,196,0.04) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 0%, var(--a-d3) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(95,208,196,0.04) 0%, transparent 50%);
 }
 ::selection { background: var(--a-d2); color: var(--a-2); }
+[data-theme="light"] ::selection { background: var(--a-d2); color: var(--a); }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--bg-4); }
 
-.app { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto; padding: 0 28px; }
+.app { position: relative; z-index: 1; max-width: 1600px; margin: 0 auto; padding: 0 28px; }
 
 /* ── TOPBAR ── */
-.topbar { position: sticky; top: 0; z-index: 100; background: rgba(10,13,20,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--b-1); margin: 0 -28px 0 -28px; padding: 0 28px; }
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,13,20,0.85);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--b-1);
+  margin: 0 -28px 0 -28px; padding: 0 28px;
+}
 [data-theme="light"] .topbar { background: rgba(250,248,243,0.88); }
-.topbar-inner { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; gap: 16px; height: 60px; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: 'Fraunces', serif; font-size: 17px; font-weight: 500; }
+.topbar-inner { max-width: 1600px; margin: 0 auto; display: flex; align-items: center; gap: 16px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: 'Fraunces', serif; font-size: 17px; font-weight: 500; letter-spacing: -0.01em; color: var(--t-1); white-space: nowrap; }
 .brand-logo { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--a) 0%, var(--a-2) 100%); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; color: white; font-weight: 600; font-size: 14px; font-style: italic; }
 .brand-sub { color: var(--t-3); font-weight: 400; font-style: italic; font-size: 14px; }
 .topbar-spacer { flex: 1; }
 .topbar-btn { background: none; border: 1px solid var(--b-2); color: var(--t-2); font-family: inherit; font-size: 12px; font-weight: 500; padding: 7px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.18s var(--ease); }
 .topbar-btn:hover { border-color: var(--b-3); color: var(--t-1); background: var(--bg-2); }
+.topbar-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 .theme-toggle { width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-.theme-toggle svg { width: 14px; height: 14px; }
 
 /* ── HERO ── */
-.hero { padding: 36px 0 22px; }
-.hero-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--a); background: var(--a-d); border: 1px solid var(--a-d2); padding: 6px 14px; border-radius: 100px; margin-bottom: 18px; }
+.hero { padding: 40px 0 24px; position: relative; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--a); background: var(--a-d); border: 1px solid var(--a-d2); padding: 6px 14px; border-radius: 100px; margin-bottom: 22px; }
 .hero-eyebrow::before { content: ''; width: 6px; height: 6px; background: var(--a); border-radius: 50%; box-shadow: 0 0 0 3px var(--a-d), 0 0 8px var(--a-2); animation: pulse 2.4s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.85); } }
-.hero-title { font-family: 'Fraunces', serif; font-size: clamp(28px, 4vw, 40px); font-weight: 400; line-height: 1.1; letter-spacing: -0.025em; margin-bottom: 10px; }
+.hero-title { font-family: 'Fraunces', serif; font-size: clamp(30px, 4.6vw, 44px); font-weight: 400; line-height: 1.1; letter-spacing: -0.025em; color: var(--t-1); margin-bottom: 12px; }
 .hero-title em { font-style: italic; background: linear-gradient(120deg, var(--a) 0%, var(--a-2) 50%, var(--a-3) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.hero-sub { font-size: 14.5px; color: var(--t-2); max-width: 720px; font-weight: 300; line-height: 1.55; }
+.hero-sub { font-size: 15px; color: var(--t-2); max-width: 720px; font-weight: 300; line-height: 1.55; }
+
+/* ── GUÍA RÁPIDA ── */
+.guide-card { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: var(--r-lg); padding: 22px 24px; margin-bottom: 16px; }
+.guide-h { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; letter-spacing: -0.01em; color: var(--t-1); margin-bottom: 4px; }
+.guide-h em { font-style: italic; color: var(--a-2); }
+.guide-sub { font-size: 13.5px; color: var(--t-3); margin-bottom: 16px; font-weight: 300; }
+.guide-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 1100px) { .guide-steps { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .guide-steps { grid-template-columns: 1fr; } }
+.guide-step { background: var(--bg-1); border: 1px solid var(--b-1); border-radius: var(--r-md); padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+.guide-step-num { font-family: 'Fraunces', serif; font-style: italic; font-size: 22px; color: var(--a); line-height: 1; min-width: 22px; }
+.guide-step-body { flex: 1; }
+.guide-step-h { font-size: 13px; font-weight: 600; color: var(--t-1); margin-bottom: 3px; letter-spacing: -0.005em; }
+.guide-step-t { font-size: 12.5px; color: var(--t-2); font-weight: 300; line-height: 1.5; }
+.guide-step-t kbd { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; background: var(--bg-3); border: 1px solid var(--b-2); padding: 1px 5px; border-radius: 3px; color: var(--a-2); }
 
 /* ── SECTION HEADERS ── */
-.section-h { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; letter-spacing: -0.015em; margin: 26px 0 8px; color: var(--t-1); }
+.section-h { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; letter-spacing: -0.015em; margin: 28px 0 6px; color: var(--t-1); }
 .section-h em { font-style: italic; color: var(--a-2); }
-.section-sub { font-size: 13.5px; color: var(--t-3); margin-bottom: 18px; font-weight: 300; }
-.sub-h { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-.sub-h::before { content: ''; width: 12px; height: 1px; background: var(--a); }
+.section-sub { font-size: 14px; color: var(--t-3); margin-bottom: 16px; font-weight: 300; max-width: 760px; }
 
-/* ── PANEL CARDS ── */
-.panel-card { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: var(--r-lg); padding: 22px 24px; margin-bottom: 16px; }
-.panel-card.compact { padding: 18px 20px; }
+/* ── EDITOR LAYOUT ── */
+.editor { display: grid; grid-template-columns: 200px 1fr 340px; gap: 12px; align-items: stretch; }
+@media (max-width: 1280px) { .editor { grid-template-columns: 180px 1fr 300px; } }
+@media (max-width: 1000px) { .editor { grid-template-columns: 1fr; } }
 
-/* ── ENVIRONMENT BAR ── */
-.env-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.env-tile { background: var(--bg-1); border: 1px solid var(--b-1); border-radius: var(--r-md); padding: 12px 14px; }
-.env-tile-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-3); font-weight: 600; margin-bottom: 4px; }
-.env-tile-row { display: flex; align-items: baseline; gap: 6px; }
-.env-input { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: 5px; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--t-1); outline: none; width: 80px; }
-.env-input:focus { border-color: var(--a-d2); box-shadow: 0 0 0 2px var(--a-d3); }
-.env-input-unit { font-size: 11px; color: var(--t-3); font-family: 'JetBrains Mono', monospace; }
+.ed-card { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: var(--r-lg); display: flex; flex-direction: column; min-height: 0; }
+.ed-card-h { padding: 14px 16px; border-bottom: 1px solid var(--b-1); display: flex; align-items: center; gap: 10px; }
+.ed-card-h-t { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-3); flex: 1; }
+.ed-card-h-acc { width: 12px; height: 1px; background: var(--a); }
+.ed-card-body { padding: 14px 16px; flex: 1; min-height: 0; }
+.ed-card-body.flush { padding: 0; }
 
-/* ── COMPONENT PALETTE ── */
-.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 4px; }
-.pal-btn { background: var(--bg-1); border: 1px solid var(--b-1); border-radius: var(--r-md); padding: 12px 10px; cursor: pointer; transition: all 0.15s; text-align: center; font-family: inherit; color: var(--t-2); display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.pal-btn:hover { border-color: var(--a-d2); background: var(--bg-3); color: var(--t-1); }
-.pal-btn svg { width: 32px; height: 32px; opacity: 0.85; }
-.pal-btn-label { font-size: 11.5px; font-weight: 500; }
+/* ── PALETA ── */
+.palette { display: flex; flex-direction: column; gap: 6px; }
+.pal-btn { display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: var(--bg-1); border: 1px solid var(--b-1); border-radius: var(--r-md); color: var(--t-2); cursor: grab; transition: all 0.15s var(--ease); user-select: none; -webkit-user-select: none; font-family: inherit; font-size: 12.5px; font-weight: 500; text-align: left; }
+.pal-btn:hover { border-color: var(--b-3); color: var(--t-1); background: var(--bg-3); transform: translateY(-1px); }
+.pal-btn:active { cursor: grabbing; transform: translateY(0); }
+.pal-btn.dragging { opacity: 0.5; }
+.pal-btn-icon { width: 26px; height: 26px; flex-shrink: 0; color: var(--a-2); }
+.pal-btn-icon svg { width: 100%; height: 100%; }
 
-/* ── STREAMS TABLE ── */
-.streams-wrap { overflow-x: auto; }
-.streams-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; min-width: 800px; }
-.streams-table th { background: var(--bg-1); color: var(--t-3); font-weight: 600; padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--b-2); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
-.streams-table th .unit { display: block; font-weight: 400; font-size: 9px; color: var(--t-4); text-transform: none; letter-spacing: 0; }
-.streams-table td { padding: 5px 6px; border-bottom: 1px solid var(--b-1); }
-.streams-table td:first-child, .streams-table th:first-child { padding-left: 12px; }
-.streams-table td:last-child, .streams-table th:last-child { padding-right: 12px; }
-.streams-table tr:hover td { background: var(--bg-1); }
-.streams-table input { width: 100%; background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 4px 6px; font-family: inherit; font-size: inherit; color: var(--t-1); outline: none; transition: all 0.15s; }
-.streams-table input:hover { border-color: var(--b-2); background: var(--bg-1); }
-.streams-table input:focus { border-color: var(--a-d2); background: var(--bg-1); box-shadow: 0 0 0 1px var(--a-d3); }
-.streams-table .stream-id { font-weight: 600; color: var(--a-2); width: 50px; text-align: center; }
-.streams-table .stream-name { width: 110px; }
-.streams-table .stream-name input { color: var(--t-2); font-style: italic; }
-.streams-table input.calc { color: var(--a-2); font-weight: 500; }
-.row-actions { width: 60px; text-align: right; }
-.row-btn { background: none; border: 1px solid var(--b-1); color: var(--t-3); padding: 3px 7px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.15s; }
-.row-btn:hover { border-color: var(--err); color: var(--err); }
-.streams-toolbar { display: flex; gap: 8px; margin-top: 12px; }
-.btn-add { background: var(--a-d); color: var(--a-2); border: 1px solid var(--a-d2); padding: 7px 14px; border-radius: 7px; font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-.btn-add:hover { background: var(--a-d2); color: var(--a); }
-.btn-secondary { background: var(--bg-1); color: var(--t-2); border: 1px solid var(--b-1); padding: 7px 14px; border-radius: 7px; font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-.btn-secondary:hover { border-color: var(--b-2); color: var(--t-1); }
+.pal-section-h { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-4); margin: 12px 4px 6px; }
+.pal-section-h:first-child { margin-top: 0; }
 
-/* ── COMPONENTS LIST ── */
-.comp-list { display: flex; flex-direction: column; gap: 10px; }
-.comp-card { background: var(--bg-1); border: 1px solid var(--b-1); border-radius: var(--r-md); padding: 14px 16px; transition: border-color 0.15s; }
-.comp-card:hover { border-color: var(--b-2); }
-.comp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.comp-icon { width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-3); border-radius: 7px; }
-.comp-icon svg { width: 22px; height: 22px; }
-.comp-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--t-1); flex: 1; }
-.comp-title-input { background: transparent; border: 1px solid transparent; color: var(--t-1); font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; padding: 2px 6px; border-radius: 4px; outline: none; width: 100%; }
-.comp-title-input:hover { border-color: var(--b-2); }
-.comp-title-input:focus { border-color: var(--a-d2); background: var(--bg-2); }
-.comp-type { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--t-3); font-weight: 500; }
-.comp-del { background: none; border: 1px solid var(--b-1); color: var(--t-3); padding: 4px 9px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: all 0.15s; }
-.comp-del:hover { border-color: var(--err); color: var(--err); }
-.comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.comp-field { display: flex; flex-direction: column; gap: 4px; }
-.comp-field-label { font-size: 10.5px; color: var(--t-3); font-weight: 500; }
-.comp-field-row { display: flex; align-items: center; gap: 4px; }
-.comp-field input, .comp-field select { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: 5px; padding: 5px 8px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--t-1); outline: none; width: 100%; transition: all 0.15s; }
-.comp-field input:focus, .comp-field select:focus { border-color: var(--a-d2); box-shadow: 0 0 0 1px var(--a-d3); }
-.comp-field-unit { font-size: 11px; color: var(--t-3); flex-shrink: 0; min-width: 26px; }
-.comp-result { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: 6px; padding: 6px 9px; margin-top: 8px; }
-.comp-result-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 3px 0; font-size: 12.5px; align-items: baseline; }
-.comp-result-label { color: var(--t-3); }
-.comp-result-val { font-family: 'JetBrains Mono', monospace; color: var(--t-1); font-weight: 500; }
-.comp-result-val.pos { color: var(--ok); }
-.comp-result-val.neg { color: var(--err); }
-.comp-result-val.warn { color: var(--warn); }
+/* ── CANVAS ── */
+.canvas-wrap { position: relative; flex: 1; min-height: 540px; height: 640px; overflow: hidden; border-radius: 0 0 var(--r-lg) var(--r-lg); background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(var(--grid-2) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--grid-2) 1px, transparent 1px) 0 0 / 120px 120px,
+    var(--bg-1);
+}
 
-.empty-state { text-align: center; padding: 40px 20px; color: var(--t-3); font-size: 13.5px; font-weight: 300; border: 1px dashed var(--b-2); border-radius: var(--r-md); }
-.empty-state em { color: var(--a-2); font-style: italic; }
+.canvas-toolbar { display: flex; align-items: center; gap: 6px; }
+.tb-btn { background: var(--bg-1); border: 1px solid var(--b-1); color: var(--t-2); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s var(--ease); padding: 0; }
+.tb-btn:hover { border-color: var(--b-3); color: var(--t-1); background: var(--bg-3); }
+.tb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tb-btn svg { width: 14px; height: 14px; }
+.tb-zoom { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--t-3); padding: 0 8px; min-width: 48px; text-align: center; }
+.tb-sep { width: 1px; height: 18px; background: var(--b-1); margin: 0 2px; }
 
-/* ── RESULTS ── */
-.results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
-@media (max-width: 1100px) { .results-grid { grid-template-columns: repeat(2, 1fr); } }
-.r-tile { background: var(--bg-1); border: 1px solid var(--b-1); border-radius: var(--r-md); padding: 14px 16px; }
-.r-tile-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-3); font-weight: 600; margin-bottom: 5px; }
-.r-tile-val { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; color: var(--t-1); letter-spacing: -0.015em; line-height: 1.2; }
-.r-tile-val .unit { font-size: 13px; color: var(--t-3); margin-left: 4px; font-family: 'JetBrains Mono', monospace; }
-.r-tile-val.pos { color: var(--ok); }
-.r-tile-val.neg { color: var(--err); }
-.r-tile-extra { font-size: 11px; color: var(--t-3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.canvas-svg { width: 100%; height: 100%; display: block; cursor: default; touch-action: none; }
+.canvas-svg.panning { cursor: grabbing; }
+.canvas-svg.connecting { cursor: crosshair; }
 
-/* Per-component balance table */
-.balance-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
-.balance-table th { background: var(--bg-1); color: var(--t-3); font-weight: 600; padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--b-2); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
-.balance-table th:first-child { text-align: left; }
-.balance-table th .unit { display: block; font-weight: 400; font-size: 9px; color: var(--t-4); text-transform: none; letter-spacing: 0; }
-.balance-table td { padding: 8px 10px; border-bottom: 1px solid var(--b-1); text-align: right; }
-.balance-table td:first-child { text-align: left; font-family: 'Inter'; }
-.balance-table td.comp-name { color: var(--t-1); font-weight: 500; }
-.balance-table td.comp-type { color: var(--t-3); font-size: 11px; padding-left: 6px; }
-.balance-table td.pos { color: var(--ok); }
-.balance-table td.neg { color: var(--err); }
-.balance-table tr.total-row { background: var(--bg-1); font-weight: 600; }
-.balance-table tr.total-row td { padding: 11px 10px; border-bottom: none; border-top: 2px solid var(--b-2); }
-.balance-table tr.total-row td:first-child { color: var(--a-2); font-weight: 600; }
+.canvas-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0.85; }
+.canvas-empty-inner { text-align: center; max-width: 360px; padding: 24px; }
+.canvas-empty-icon { width: 44px; height: 44px; margin: 0 auto 14px; color: var(--t-4); }
+.canvas-empty-icon svg { width: 100%; height: 100%; }
+.canvas-empty-h { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 500; color: var(--t-2); margin-bottom: 6px; letter-spacing: -0.01em; }
+.canvas-empty-t { font-size: 13px; color: var(--t-3); font-weight: 300; line-height: 1.55; }
 
-/* ── DIAGRAM ── */
-.diag-wrap { background: var(--bg-2); border: 1px solid var(--b-1); border-radius: var(--r-lg); padding: 18px; overflow-x: auto; }
-.diag-wrap svg { display: block; width: 100%; min-width: 700px; height: auto; }
+.canvas-svg.dragover-active + .canvas-empty .canvas-empty-h { color: var(--a-2); }
 
-/* ── TABLA DE PROPIEDADES PLACEHOLDER ── */
-.props-placeholder { background: var(--bg-1); border: 2px dashed var(--b-2); border-radius: var(--r-md); padding: 18px 20px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--t-3); white-space: pre-wrap; line-height: 1.6; min-height: 1100px; }
-.props-placeholder .hdr { color: var(--a-2); font-weight: 600; }
-.props-placeholder .note { color: var(--t-2); font-style: italic; font-family: 'Inter'; }
+/* drop overlay */
+.canvas-drop-overlay { position: absolute; inset: 8px; border: 2px dashed var(--a-d2); border-radius: var(--r-md); pointer-events: none; opacity: 0; transition: opacity 0.15s; background: var(--a-d3); }
+.canvas-wrap.dragover .canvas-drop-overlay { opacity: 1; }
 
-/* ── FORMULA INLINE ── */
-.formula-inline { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; background: var(--bg-3); padding: 1px 5px; border-radius: 3px; color: var(--a-2); }
+/* ── SVG: COMPONENTES Y CORRIENTES ── */
+.comp-body { fill: var(--bg-2); stroke: var(--b-3); stroke-width: 1.2; transition: stroke 0.15s, fill 0.15s; }
+.comp.selected .comp-body { stroke: var(--a); stroke-width: 1.8; filter: drop-shadow(0 0 8px var(--a-d2)); }
+.comp:hover .comp-body { stroke: var(--b-3); fill: var(--bg-3); }
+.comp.selected:hover .comp-body { stroke: var(--a); }
+.comp { cursor: grab; }
+.comp.dragging { cursor: grabbing; }
+.comp-icon { fill: none; stroke: var(--a-2); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.comp.selected .comp-icon { stroke: var(--a); }
+.comp-label { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 500; fill: var(--t-1); text-anchor: middle; pointer-events: none; }
+.comp-label-sub { font-family: 'Inter', sans-serif; font-size: 9.5px; font-weight: 600; fill: var(--t-3); text-anchor: middle; letter-spacing: 0.06em; text-transform: uppercase; pointer-events: none; }
 
-/* ── CALLOUTS ── */
-.callout { background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.18); border-left: 3px solid var(--info); border-radius: var(--r-md); padding: 14px 16px; margin: 10px 0; }
-.callout.warn { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.18); border-left-color: var(--warn); }
-.callout-h { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--info); margin-bottom: 6px; }
-.callout.warn .callout-h { color: var(--warn); }
-.callout-text { font-size: 13.5px; color: var(--t-2); line-height: 1.6; }
-.callout-text strong { color: var(--t-1); font-weight: 500; }
+.port { fill: var(--bg-1); stroke: var(--t-3); stroke-width: 1.4; cursor: crosshair; transition: all 0.12s var(--ease); }
+.port:hover { fill: var(--a); stroke: var(--a-2); r: 7; }
+.port.in { stroke: var(--info); }
+.port.out { stroke: var(--ok); }
+.port.connecting { fill: var(--a); stroke: var(--a-2); r: 8; }
+.port.compatible { fill: var(--ok); stroke: var(--ok); r: 8; filter: drop-shadow(0 0 6px rgba(74,222,128,0.5)); }
+.port.incompatible { fill: var(--bg-3); stroke: var(--err); opacity: 0.4; }
+.port.connected { fill: var(--t-3); stroke: var(--t-2); }
 
-/* ── STATUS BAR ── */
-.status-bar { padding: 12px 14px; border-radius: var(--r-md); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.status-bar.ok { background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.25); color: var(--ok); }
-.status-bar.warn { background: rgba(251,191,36,0.10); border: 1px solid rgba(251,191,36,0.25); color: var(--warn); }
-.status-bar.err { background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.25); color: var(--err); }
-.status-bar.info { background: rgba(96,165,250,0.10); border: 1px solid rgba(96,165,250,0.25); color: var(--info); }
+/* preview line while connecting */
+.connect-preview { fill: none; stroke: var(--a); stroke-width: 1.8; stroke-dasharray: 4 4; opacity: 0.85; pointer-events: none; }
 
-footer { margin-top: 80px; padding: 40px 0 60px; border-top: 1px solid var(--b-1); display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--t-3); }
-footer .heart { color: var(--a); }
+.stream { fill: none; stroke: var(--t-2); stroke-width: 1.8; transition: stroke 0.15s; cursor: pointer; }
+.stream:hover { stroke: var(--a-2); stroke-width: 2.2; }
+.stream.selected { stroke: var(--a); stroke-width: 2.4; filter: drop-shadow(0 0 6px var(--a-d2)); }
+.stream-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; pointer-events: stroke; }
+.stream-num-bg { fill: var(--bg-2); stroke: var(--b-2); stroke-width: 1; }
+.stream.selected ~ .stream-num-bg { stroke: var(--a); }
+.stream-num-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; fill: var(--t-1); text-anchor: middle; dominant-baseline: middle; pointer-events: none; user-select: none; }
+
+/* ── PANEL DE PROPIEDADES ── */
+.props-empty { padding: 28px 18px; text-align: center; color: var(--t-3); font-size: 13px; font-weight: 300; line-height: 1.6; }
+.props-empty-icon { width: 36px; height: 36px; margin: 0 auto 10px; color: var(--t-4); opacity: 0.6; }
+.props-empty-icon svg { width: 100%; height: 100%; }
+
+.props-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--b-1); }
+.props-h-info { flex: 1; min-width: 0; }
+.props-h-kind { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-3); margin-bottom: 4px; }
+.props-h-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--t-1); letter-spacing: -0.01em; line-height: 1.2; }
+.props-h-name em { font-style: italic; color: var(--a-2); }
+.props-h-actions { display: flex; gap: 4px; }
+.props-h-btn { background: var(--bg-1); border: 1px solid var(--b-1); color: var(--t-3); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s var(--ease); }
+.props-h-btn:hover { border-color: var(--err); color: var(--err); background: rgba(248,113,113,0.08); }
+.props-h-btn svg { width: 14px; height: 14px; }
+
+.props-body { padding: 14px 16px; }
+.props-section { margin-bottom: 18px; }
+.props-section:last-child { margin-bottom: 0; }
+.props-section-h { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t-3); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.props-section-h::before { content: ''; width: 10px; height: 1px; background: var(--a); }
+
+.props-row { display: grid; grid-template-columns: 1fr 110px 28px; gap: 8px; align-items: center; margin-bottom: 7px; }
+.props-row-lbl { font-size: 12.5px; color: var(--t-1); display: flex; align-items: baseline; gap: 6px; font-weight: 400; }
+.props-row-lbl-sym { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--a-2); font-weight: 500; }
+.props-row-lbl-unit { font-size: 10.5px; color: var(--t-3); font-family: 'JetBrains Mono', monospace; font-weight: 400; margin-left: auto; padding-right: 4px; }
+.props-input { width: 100%; background: var(--bg-1); border: 1px solid var(--b-1); border-radius: 6px; padding: 6px 9px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--t-1); outline: none; transition: all 0.15s; text-align: right; }
+.props-input:hover { border-color: var(--b-2); }
+.props-input:focus { border-color: var(--a); background: var(--bg-2); }
+.props-input.computed { color: var(--info); background: var(--bg-2); }
+.props-input::placeholder { color: var(--t-4); font-weight: 400; }
+
+.props-mode-btn { background: var(--bg-1); border: 1px solid var(--b-1); color: var(--t-3); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s var(--ease); padding: 0; }
+.props-mode-btn:hover { border-color: var(--b-3); color: var(--t-1); }
+.props-mode-btn.computed { color: var(--info); border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+.props-mode-btn.computed:hover { color: var(--info); border-color: var(--info); }
+.props-mode-btn svg { width: 13px; height: 13px; }
+
+.props-info { font-size: 11.5px; color: var(--t-3); line-height: 1.5; padding: 9px 11px; background: var(--bg-1); border: 1px solid var(--b-1); border-radius: 6px; font-weight: 300; }
+.props-info strong { color: var(--t-2); font-weight: 500; }
+.props-info code { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--a-2); background: var(--bg-3); padding: 1px 5px; border-radius: 3px; }
+
+.props-ports { font-size: 12px; color: var(--t-2); display: flex; flex-direction: column; gap: 4px; }
+.props-port-row { display: flex; align-items: center; gap: 8px; padding: 6px 9px; background: var(--bg-1); border: 1px solid var(--b-1); border-radius: 6px; font-size: 11.5px; }
+.props-port-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.props-port-dot.in { background: var(--info); box-shadow: 0 0 0 2px rgba(96,165,250,0.18); }
+.props-port-dot.out { background: var(--ok); box-shadow: 0 0 0 2px rgba(74,222,128,0.18); }
+.props-port-row-lbl { color: var(--t-2); flex: 1; }
+.props-port-row-stream { color: var(--a-2); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.props-port-row-stream.empty { color: var(--t-4); font-style: italic; font-family: 'Inter', sans-serif; font-size: 10.5px; }
+
+/* ── FOOTER ── */
+.footer { margin: 60px 0 30px; padding-top: 22px; border-top: 1px solid var(--b-1); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--t-3); font-weight: 300; }
+.footer-brand { color: var(--t-2); font-family: 'Fraunces', serif; font-style: italic; }
+
+/* helper utility */
+.hidden { display: none !important; }
+
+/* status / toast */
+.toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { padding: 10px 16px; background: var(--bg-2); border: 1px solid var(--b-2); border-radius: 100px; font-size: 12.5px; color: var(--t-1); display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); animation: toastIn 0.25s var(--ease-out); pointer-events: auto; }
+.toast.warn { border-color: var(--warn); color: var(--warn); }
+.toast.err { border-color: var(--err); color: var(--err); }
+.toast.ok { border-color: var(--ok); color: var(--ok); }
+.toast.fade-out { animation: toastOut 0.25s var(--ease-out) forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(8px); } }
+
 </style>
 </head>
-<body data-theme="dark">
+<body>
 
-<div class="topbar">
-  <div class="topbar-inner app">
+<!-- ═══════════════════════════ TOPBAR ═══════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-inner">
     <div class="brand">
-      <div class="brand-logo">T</div>
-      <span>Simulador <span class="brand-sub">/ Instalaciones</span></span>
+      <div class="brand-logo">e</div>
+      <div>Editor de Instalaciones <span class="brand-sub">· TDE · FIUBA</span></div>
     </div>
     <div class="topbar-spacer"></div>
-    <a class="topbar-btn" href="simulador_exergia.html" style="text-decoration:none">← Simulador de exergía simple</a>
-    <button class="topbar-btn theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Cambiar tema">
-      <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <button class="topbar-btn theme-toggle" id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     </button>
   </div>
-</div>
+</header>
 
-<div class="app">
+<!-- ═══════════════════════════ APP ═══════════════════════════ -->
+<main class="app">
 
-<section class="hero">
-  <div class="hero-eyebrow">UBA · Transformación de la Energía</div>
-  <h1 class="hero-title">Simulador de <em>Instalaciones</em></h1>
-  <p class="hero-sub">Definí los caudales y propiedades de cada corriente, armá la instalación con turbinas, compresores, válvulas, intercambiadores y bombas, y obtené balances de energía, entropía y exergía por componente y totales.</p>
-</section>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">Editor visual · Fase 1</div>
+    <h1 class="hero-title">Armá tu <em>instalación termodinámica</em></h1>
+    <p class="hero-sub">Arrastrá componentes desde la paleta, conectá los puertos para definir las corrientes y configurá los parámetros de cada equipo. En las próximas fases sumamos la tabla del agua, el solver y el diagrama T–s automático.</p>
+  </section>
 
-<!-- ═══════════ ESTADO DE REFERENCIA ═══════════ -->
-<div class="panel-card compact">
-  <div class="sub-h">Estado de referencia (ambiente)</div>
-  <div class="env-bar">
-    <div class="env-tile">
-      <div class="env-tile-label">T₀ · temperatura</div>
-      <div class="env-tile-row">
-        <input type="number" class="env-input" id="envT0" value="300.15" step="0.01">
-        <span class="env-input-unit">K</span>
+  <!-- GUÍA RÁPIDA -->
+  <section class="guide-card">
+    <h2 class="guide-h">Cómo <em>operarlo</em></h2>
+    <p class="guide-sub">Cuatro pasos para tener una instalación lista en el lienzo.</p>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="guide-step-num">1.</div>
+        <div class="guide-step-body">
+          <div class="guide-step-h">Arrastrá componentes</div>
+          <div class="guide-step-t">Tomá un equipo de la <strong>paleta</strong> (izquierda) y soltalo en el lienzo. Lo movés con el cursor cuando quieras.</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">2.</div>
+        <div class="guide-step-body">
+          <div class="guide-step-h">Conectá los puertos</div>
+          <div class="guide-step-t">Apretá un puerto de salida (verde) y arrastrá hasta un puerto de entrada (azul). La corriente se numera sola.</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">3.</div>
+        <div class="guide-step-body">
+          <div class="guide-step-h">Editá las propiedades</div>
+          <div class="guide-step-t">Click en un componente o corriente para abrir el <strong>panel</strong> de propiedades a la derecha. Cargá lo que conozcas.</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">4.</div>
+        <div class="guide-step-body">
+          <div class="guide-step-h">Navegá el lienzo</div>
+          <div class="guide-step-t">Rueda del mouse para zoom. Click derecho o <kbd>Espacio</kbd>+drag para mover la vista. <kbd>Supr</kbd> elimina lo seleccionado.</div>
+        </div>
       </div>
     </div>
-    <div class="env-tile">
-      <div class="env-tile-label">P₀ · presión</div>
-      <div class="env-tile-row">
-        <input type="number" class="env-input" id="envP0" value="101.3" step="0.1">
-        <span class="env-input-unit">kPa</span>
+  </section>
+
+  <!-- EDITOR PRINCIPAL -->
+  <h2 class="section-h">Lienzo de la <em>instalación</em></h2>
+  <p class="section-sub">Construí la planta arrastrando componentes y trazando corrientes entre ellos. Todo lo que cargues queda guardado localmente en este navegador.</p>
+
+  <section class="editor">
+
+    <!-- PALETA -->
+    <aside class="ed-card" id="paletteCard">
+      <div class="ed-card-h">
+        <div class="ed-card-h-acc"></div>
+        <div class="ed-card-h-t">Paleta</div>
       </div>
-    </div>
-    <div class="env-tile">
-      <div class="env-tile-label">h₀ · entalpía referencia</div>
-      <div class="env-tile-row">
-        <input type="number" class="env-input" id="envH0" value="113.2" step="0.1">
-        <span class="env-input-unit">kJ/kg</span>
+      <div class="ed-card-body" id="paletteBody">
+        <div class="pal-section-h">Equipos rotativos</div>
+        <div class="palette" id="paletteRot"></div>
+        <div class="pal-section-h">Transferencia de calor</div>
+        <div class="palette" id="paletteHX"></div>
+        <div class="pal-section-h">Otros</div>
+        <div class="palette" id="paletteMisc"></div>
       </div>
-    </div>
-    <div class="env-tile">
-      <div class="env-tile-label">s₀ · entropía referencia</div>
-      <div class="env-tile-row">
-        <input type="number" class="env-input" id="envS0" value="0.3954" step="0.0001">
-        <span class="env-input-unit">kJ/kgK</span>
+    </aside>
+
+    <!-- CANVAS -->
+    <section class="ed-card" id="canvasCard">
+      <div class="ed-card-h">
+        <div class="ed-card-h-acc"></div>
+        <div class="ed-card-h-t">Lienzo</div>
+        <div class="canvas-toolbar">
+          <button class="tb-btn" id="zoomOutBtn" title="Alejar (−)" aria-label="Alejar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="tb-zoom" id="zoomLabel">100%</span>
+          <button class="tb-btn" id="zoomInBtn" title="Acercar (+)" aria-label="Acercar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="tb-btn" id="zoomFitBtn" title="Ajustar a pantalla" aria-label="Ajustar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+          </button>
+          <div class="tb-sep"></div>
+          <button class="tb-btn" id="clearBtn" title="Vaciar lienzo" aria-label="Vaciar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+          </button>
+        </div>
       </div>
-    </div>
-  </div>
-  <div class="callout" style="margin-top:14px">
-    <div class="callout-h">💡 Cómo usar este simulador</div>
-    <div class="callout-text"><strong>1.</strong> Configurá el estado de referencia (T₀, P₀, h₀, s₀ del agua líquida saturada a T₀). <strong>2.</strong> Cargá las propiedades termodinámicas de cada corriente en la tabla (T, P, h, s, x, ṁ). <strong>3.</strong> Agregá los componentes de tu instalación y conectá las corrientes de entrada/salida de cada uno. <strong>4.</strong> El simulador calcula automáticamente Q, W, ΔS_g y X_D por componente, más los totales y el rendimiento exergético del proceso.</div>
-  </div>
-</div>
-
-<!-- ═══════════ TABLA DE PROPIEDADES (PLACEHOLDER) ═══════════ -->
-<h2 class="section-h">Tabla de <em>propiedades</em> termodinámicas</h2>
-<p class="section-sub">Espacio reservado para cargar tablas de propiedades del fluido (agua, aire, R-134a, etc.). Para esta versión, las propiedades de cada corriente se ingresan manualmente en la tabla de corrientes más abajo.</p>
-
-<div class="panel-card">
-  <div class="props-placeholder">
-<span class="hdr">═══════════ TABLA DE PROPIEDADES TERMODINÁMICAS ═══════════</span>
-
-<span class="note">// ZONA RESERVADA PARA CARGAR DATOS DE TABLAS DEL FLUIDO DE TRABAJO
-// Por ahora, las propiedades de cada corriente se ingresan manualmente
-// en la sección "Corrientes" más abajo.
-//
-// Posibles fuentes a cargar:
-//   - Tablas de vapor saturado (T y P como entrada)
-//   - Tablas de vapor sobrecalentado
-//   - Tablas de R-134a
-//   - Tablas de aire (gas ideal con cp variable)
-//   - IAPWS-IF97 o correlaciones equivalentes</span>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="hdr">═══════════ FIN ZONA RESERVADA ═══════════</span>
-  </div>
-</div>
-
-<!-- ═══════════ CORRIENTES ═══════════ -->
-<h2 class="section-h">Corrientes del <em>proceso</em></h2>
-<p class="section-sub">Cargá las propiedades termodinámicas de cada corriente. La exergía específica ψ y la exergía total Ψ̇ se calculan automáticamente.</p>
-
-<div class="panel-card">
-  <div class="streams-wrap">
-    <table class="streams-table" id="streamsTable">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th class="stream-name">Nombre</th>
-          <th>T <span class="unit">K</span></th>
-          <th>P <span class="unit">kPa</span></th>
-          <th>h <span class="unit">kJ/kg</span></th>
-          <th>s <span class="unit">kJ/kgK</span></th>
-          <th>x <span class="unit">título</span></th>
-          <th>ṁ <span class="unit">kg/s</span></th>
-          <th>ψ <span class="unit">kJ/kg · calc</span></th>
-          <th>Ψ̇ <span class="unit">kW · calc</span></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="streamsBody"></tbody>
-    </table>
-  </div>
-  <div class="streams-toolbar">
-    <button class="btn-add" onclick="addStream()">+ Agregar corriente</button>
-    <button class="btn-secondary" onclick="loadExample()">Cargar ejemplo · Cengel turbina</button>
-  </div>
-</div>
-
-<!-- ═══════════ COMPONENTES ═══════════ -->
-<h2 class="section-h">Componentes de la <em>instalación</em></h2>
-<p class="section-sub">Agregá componentes y asigná los números de las corrientes que entran y salen de cada uno. Los componentes se evalúan en orden y se computan los balances de energía, entropía y exergía.</p>
-
-<div class="panel-card">
-  <div class="sub-h" style="margin-bottom:14px">Biblioteca de componentes</div>
-  <div class="palette">
-    <button class="pal-btn" onclick="addComponent('turbine')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6 L6 26 L26 16 Z M22 12 L22 20"/></svg>
-      <span class="pal-btn-label">Turbina</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('compressor')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M26 6 L26 26 L6 16 Z M10 12 L10 20"/></svg>
-      <span class="pal-btn-label">Compresor</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('pump')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="16" cy="16" r="8"/><path d="M16 8 L16 24 M8 16 L24 16"/></svg>
-      <span class="pal-btn-label">Bomba</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('valve')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8 L6 24 L16 16 L26 24 L26 8 L16 16 Z"/></svg>
-      <span class="pal-btn-label">Válvula</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('heatex')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="10" width="22" height="12" rx="2"/><path d="M9 14 L9 18 M14 14 L14 18 M19 14 L19 18 M24 14 L24 18"/></svg>
-      <span class="pal-btn-label">Intercambiador</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('mixer')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8 L14 16 L4 24 M14 16 L28 16"/></svg>
-      <span class="pal-btn-label">Mezclador</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('separator')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16 L14 16 L24 8 M14 16 L24 24"/></svg>
-      <span class="pal-btn-label">Separador</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('boiler')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="6" width="20" height="20" rx="3"/><path d="M11 16 L16 11 L21 16 L16 21 Z"/></svg>
-      <span class="pal-btn-label">Caldera</span>
-    </button>
-    <button class="pal-btn" onclick="addComponent('condenser')">
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="6" width="20" height="20" rx="3"/><path d="M10 16 L22 16 M16 10 L16 22"/></svg>
-      <span class="pal-btn-label">Condensador</span>
-    </button>
-  </div>
-</div>
-
-<div class="comp-list" id="compList"></div>
-
-<!-- ═══════════ RESULTADOS ═══════════ -->
-<h2 class="section-h">Resultados <em>globales</em></h2>
-<p class="section-sub">Balances totales de energía, entropía y exergía del proceso completo.</p>
-
-<div id="globalStatus" class="status-bar info" style="display:none">
-  <span id="globalStatusText"></span>
-</div>
-
-<div class="panel-card">
-  <div class="results-grid">
-    <div class="r-tile">
-      <div class="r-tile-label">Q neto del proceso</div>
-      <div class="r-tile-val" id="resQnet">0<span class="unit">kW</span></div>
-      <div class="r-tile-extra">Σ Q de todos los componentes</div>
-    </div>
-    <div class="r-tile">
-      <div class="r-tile-label">W neto del proceso</div>
-      <div class="r-tile-val" id="resWnet">0<span class="unit">kW</span></div>
-      <div class="r-tile-extra">Σ W de todos los componentes</div>
-    </div>
-    <div class="r-tile">
-      <div class="r-tile-label">S generada total</div>
-      <div class="r-tile-val" id="resSgen">0<span class="unit">kW/K</span></div>
-      <div class="r-tile-extra">Σ ΔS_g · 2° principio: ≥ 0</div>
-    </div>
-    <div class="r-tile">
-      <div class="r-tile-label">Exergía destruida (X_D)</div>
-      <div class="r-tile-val" id="resXdes">0<span class="unit">kW</span></div>
-      <div class="r-tile-extra">Σ T₀ · ΔS_g</div>
-    </div>
-  </div>
-
-  <div class="sub-h" style="margin:18px 0 12px">Balance por componente</div>
-  <div style="overflow-x:auto">
-    <table class="balance-table" id="balanceTable">
-      <thead>
-        <tr>
-          <th>Componente</th>
-          <th>Tipo</th>
-          <th>Q <span class="unit">kW</span></th>
-          <th>W <span class="unit">kW</span></th>
-          <th>ΔS_g <span class="unit">kW/K</span></th>
-          <th>X_D <span class="unit">kW</span></th>
-          <th><span style="text-transform:none">η</span><sub>II</sub> <span class="unit">%</span></th>
-        </tr>
-      </thead>
-      <tbody id="balanceBody"></tbody>
-    </table>
-  </div>
-
-  <div class="results-grid" style="margin-top:18px">
-    <div class="r-tile" style="grid-column:span 2">
-      <div class="r-tile-label">Rendimiento exergético del proceso · <span style="text-transform:none">η</span><sub>II</sub></div>
-      <div class="r-tile-val" id="resEtaII">—<span class="unit">%</span></div>
-      <div class="r-tile-extra" id="resEtaIIextra">Σ ΔΨ̇(+) / Σ |ΔΨ̇(−)|</div>
-    </div>
-    <div class="r-tile" style="grid-column:span 2">
-      <div class="r-tile-label">Verificación · X_D = T₀ · ΔS_g</div>
-      <div class="r-tile-val" id="resVerif">—</div>
-      <div class="r-tile-extra" id="resVerifExtra">debe coincidir con la columna X_D</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ DIAGRAMA ═══════════ -->
-<h2 class="section-h">Diagrama del <em>proceso</em></h2>
-<p class="section-sub">Representación esquemática automática a partir de los componentes definidos.</p>
-
-<div class="diag-wrap">
-  <svg id="diagSvg" viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <marker id="diagAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
-      </marker>
-    </defs>
-    <text x="350" y="150" text-anchor="middle" fill="var(--t-3)" font-family="Inter" font-size="14" font-style="italic">El diagrama se genera automáticamente cuando agregás componentes</text>
-  </svg>
-</div>
-
-<!-- ═══════════ TEORÍA RÁPIDA ═══════════ -->
-<h2 class="section-h">Fórmulas <em>aplicadas</em></h2>
-
-<div class="panel-card compact">
-  <div class="sub-h" style="margin-bottom:14px">Definiciones y balances</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:13.5px;color:var(--t-2);line-height:1.7;font-weight:300">
+      <div class="ed-card-body flush">
+        <div class="canvas-wrap" id="canvasWrap">
+          <svg class="canvas-svg" id="canvas" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+              </marker>
+              <marker id="arrowheadSel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--a)"/>
+              </marker>
+            </defs>
+            <g id="layerStreams"></g>
+            <g id="layerComps"></g>
+            <g id="layerOverlay"></g>
+          </svg>
+          <div class="canvas-drop-overlay"></div>
+          <div class="canvas-empty" id="canvasEmpty">
+            <div class="canvas-empty-inner">
+              <div class="canvas-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 13.5v7"/></svg>
+              </div>
+              <div class="canvas-empty-h">Lienzo vacío</div>
+              <div class="canvas-empty-t">Arrastrá un componente desde la <strong>paleta</strong> para empezar a armar tu instalación.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL PROPIEDADES -->
+    <aside class="ed-card" id="propsCard">
+      <div class="ed-card-h">
+        <div class="ed-card-h-acc"></div>
+        <div class="ed-card-h-t">Propiedades</div>
+      </div>
+      <div class="ed-card-body flush" id="propsBody">
+        <div class="props-empty">
+          <div class="props-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div>Seleccioná un <strong>componente</strong> o una <strong>corriente</strong> en el lienzo para ver y editar sus propiedades acá.</div>
+        </div>
+      </div>
+    </aside>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
     <div>
-      <p style="margin-bottom:10px"><strong style="color:var(--t-1)">Exergía específica de flujo:</strong></p>
-      <p style="margin-bottom:14px"><span class="formula-inline">ψ = (h − h₀) − T₀(s − s₀)</span></p>
-      <p style="margin-bottom:10px"><strong style="color:var(--t-1)">Exergía de flujo total:</strong></p>
-      <p style="margin-bottom:14px"><span class="formula-inline">Ψ̇ = ṁ · ψ</span></p>
-      <p style="margin-bottom:10px"><strong style="color:var(--t-1)">Balance de energía (sist. abierto estacionario):</strong></p>
-      <p><span class="formula-inline">Q̇ − Ẇ = Σ ṁ_s·h_s − Σ ṁ_e·h_e</span></p>
+      Editor de instalaciones — <span class="footer-brand">fase 1 / 6</span>
     </div>
-    <div>
-      <p style="margin-bottom:10px"><strong style="color:var(--t-1)">Entropía generada:</strong></p>
-      <p style="margin-bottom:14px"><span class="formula-inline">ΔṠ_g = Σ ṁ_s·s_s − Σ ṁ_e·s_e − Q̇/T_F</span></p>
-      <p style="margin-bottom:10px"><strong style="color:var(--t-1)">Exergía destruida:</strong></p>
-      <p style="margin-bottom:14px"><span class="formula-inline">X_D = T₀ · ΔṠ_g ≥ 0</span></p>
-      <p style="margin-bottom:10px"><strong style="color:var(--t-1)">Rendimiento exergético global:</strong></p>
-      <p><span class="formula-inline">η_II = Σ ΔΨ̇_(+) / Σ |ΔΨ̇_(−)|</span></p>
-    </div>
-  </div>
-</div>
+    <div>Próxima fase: tabla termodinámica del agua y solver dirigido.</div>
+  </footer>
 
-<footer>
-  <div>Hecho con <span class="heart">♥</span> para los alumnos</div>
-</footer>
+</main>
 
-</div><!-- .app -->
+<div class="toast-wrap" id="toastWrap"></div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCRIPT
+     ═══════════════════════════════════════════════════════════════════════ -->
 <script>
-// ═══════════════════════════════════════════════════════════════════════
-//  THEME
-// ═══════════════════════════════════════════════════════════════════════
+'use strict';
+
+/* ════════════════════════════ UTILS ════════════════════════════ */
+const $ = (id) => document.getElementById(id);
+const SVGNS = 'http://www.w3.org/2000/svg';
+const svgEl = (tag, attrs = {}) => {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) {
+    if (k === 'text') el.textContent = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  return el;
+};
+const fmt = (v, dec = 2) => {
+  if (v === null || v === undefined || Number.isNaN(v)) return '—';
+  return v.toFixed(dec).replace('.', ',');
+};
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* ════════════════════════════ TOAST ════════════════════════════ */
+function toast(msg, kind = '', dur = 2400) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.textContent = msg;
+  $('toastWrap').appendChild(el);
+  setTimeout(() => {
+    el.classList.add('fade-out');
+    setTimeout(() => el.remove(), 260);
+  }, dur);
+}
+
+/* ════════════════════════════ THEME ════════════════════════════ */
+const THEME_KEY = 'transfo-theme';
 function loadTheme() {
-  const saved = localStorage.getItem('transfo-theme');
-  if (saved) document.body.dataset.theme = saved;
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'light') document.body.setAttribute('data-theme', 'light');
   updateThemeIcon();
 }
 function toggleTheme() {
-  document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('transfo-theme', document.body.dataset.theme);
+  const cur = document.body.getAttribute('data-theme');
+  if (cur === 'light') {
+    document.body.removeAttribute('data-theme');
+    localStorage.setItem(THEME_KEY, 'dark');
+  } else {
+    document.body.setAttribute('data-theme', 'light');
+    localStorage.setItem(THEME_KEY, 'light');
+  }
   updateThemeIcon();
 }
 function updateThemeIcon() {
-  const dark = document.body.dataset.theme === 'dark';
-  document.getElementById('iconMoon').style.display = dark ? 'block' : 'none';
-  document.getElementById('iconSun').style.display  = dark ? 'none'  : 'block';
+  const isLight = document.body.getAttribute('data-theme') === 'light';
+  const icon = $('themeIcon');
+  if (isLight) {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+  }
 }
+$('themeBtn').addEventListener('click', toggleTheme);
+loadTheme();
 
-// ═══════════════════════════════════════════════════════════════════════
-//  DATA MODEL
-// ═══════════════════════════════════════════════════════════════════════
-let streams = [];   // {id, name, T, P, h, s, x, m}
-let components = []; // {id, type, name, params, ins:[ids], outs:[ids]}
-let nextStreamId = 1;
-let nextCompId = 1;
-
-const env = { T0: 300.15, P0: 101.3, h0: 113.2, s0: 0.3954 };
-
-// ═══════════════════════════════════════════════════════════════════════
-//  COMPONENT DEFINITIONS
-// ═══════════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════
+   COMPONENT DEFINITIONS
+   Cada componente define sus puertos (in/out), su ícono y el set
+   de parámetros editables. Las dimensiones del cuerpo se calculan
+   a partir de la cantidad de puertos para mantener una grilla limpia.
+   ════════════════════════════════════════════════════════════════ */
 const COMP_DEFS = {
   turbine: {
-    name: 'Turbina', icon: 'M6 6 L6 26 L26 16 Z M22 12 L22 20',
-    inputs: [{key: 'in', label: 'Entrada (alta P)'}],
-    outputs: [{key: 'out', label: 'Salida (baja P)'}],
+    name: 'Turbina', short: 'TURB', category: 'rot',
+    icon: '<path d="M5 6 L5 26 L25 16 Z"/><path d="M22 11 L22 21" stroke-width="1.6"/>',
+    inputs:  [{ key: 'in',  label: 'Entrada (alta P)', side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'out', label: 'Salida (baja P)',  side: 'R', pos: 0.5 }],
     params: [
-      {key: 'eta_iso', label: 'η isoentrópico', unit: '', default: 1, min: 0, max: 1, step: 0.01, optional: true},
-      {key: 'h_out_s', label: 'h_out isoentrópico', unit: 'kJ/kg', default: '', optional: true}
+      { key: 'eta_iso', label: 'η isoentrópico', sym: 'η', unit: '—', dflt: 1, min: 0, max: 1, step: 0.01 }
     ],
-    // Q = 0 (adiabática)
-    // W = ṁ(h_e − h_s) > 0 (la turbina ENTREGA trabajo)
-    // ΔS_g = ṁ(s_s − s_e), debe ≥ 0
-    compute(ins, outs, params, env) {
-      const e = ins.in, s = outs.out;
-      const W = e.m * (e.h - s.h);  // kW, positivo si entrega
-      const Q = 0;
-      const dSg = e.m * (s.s - e.s);
-      const Xd = env.T0 * dSg;
-      const dPsi = e.m * ((e.h - s.h) - env.T0 * (e.s - s.s));  // ΔΨ entre entrada y salida
-      // Rendimiento exergético: lo que querés (W) / lo que perdés (caída de exergía del fluido)
-      const eta_II = dPsi > 0 ? W / dPsi : null;
-      const result = { Q, W, dSg, Xd, eta_II, dPsi_in: -e.m * e.psi, dPsi_out: s.m * s.psi };
-      // ΔΨ del componente: ganancia − pérdida
-      result.psi_lost = e.m * e.psi - s.m * s.psi;  // exergía cedida por el fluido
-      result.psi_gained_W = W;  // exergía ganada como trabajo
-      return result;
-    }
+    info: 'Adiabática · entrega trabajo. <code>W = ṁ(h<sub>e</sub> − h<sub>s</sub>)</code>'
   },
   compressor: {
-    name: 'Compresor', icon: 'M26 6 L26 26 L6 16 Z M10 12 L10 20',
-    inputs: [{key: 'in', label: 'Entrada (baja P)'}],
-    outputs: [{key: 'out', label: 'Salida (alta P)'}],
+    name: 'Compresor', short: 'COMP', category: 'rot',
+    icon: '<path d="M25 6 L25 26 L5 16 Z"/><path d="M9 11 L9 21" stroke-width="1.6"/>',
+    inputs:  [{ key: 'in',  label: 'Entrada (baja P)', side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'out', label: 'Salida (alta P)',  side: 'R', pos: 0.5 }],
     params: [
-      {key: 'eta_iso', label: 'η isoentrópico', unit: '', default: 1, min: 0, max: 1, step: 0.01, optional: true}
+      { key: 'eta_iso', label: 'η isoentrópico', sym: 'η', unit: '—', dflt: 1, min: 0, max: 1, step: 0.01 }
     ],
-    // W = ṁ(h_s − h_e) > 0 (el compresor RECIBE trabajo)
-    compute(ins, outs, params, env) {
-      const e = ins.in, s = outs.out;
-      const W = e.m * (s.h - e.h);  // kW, positivo si recibe (lo configuramos como W_in)
-      const Q = 0;
-      const dSg = e.m * (s.s - e.s);
-      const Xd = env.T0 * dSg;
-      const psi_gained = e.m * (s.psi - e.psi);  // ganancia de exergía del fluido
-      const eta_II = W > 0 ? psi_gained / W : null;
-      return { Q, W: -W, dSg, Xd, eta_II, psi_gained, psi_input_W: W };  // W negativo = recibe trabajo
-    }
+    info: 'Adiabático · recibe trabajo. <code>W = ṁ(h<sub>s</sub> − h<sub>e</sub>)</code>'
   },
   pump: {
-    name: 'Bomba', icon: 'M16 8 L16 24 M8 16 L24 16',
-    inputs: [{key: 'in', label: 'Entrada (líquido baja P)'}],
-    outputs: [{key: 'out', label: 'Salida (líquido alta P)'}],
+    name: 'Bomba', short: 'BMB', category: 'rot',
+    icon: '<circle cx="16" cy="16" r="9"/><path d="M16 7 L16 25 M7 16 L25 16"/>',
+    inputs:  [{ key: 'in',  label: 'Entrada (líq. baja P)', side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'out', label: 'Salida (líq. alta P)',  side: 'R', pos: 0.5 }],
     params: [
-      {key: 'eta_iso', label: 'η isoentrópico', unit: '', default: 1, min: 0, max: 1, step: 0.01, optional: true}
+      { key: 'eta_iso', label: 'η isoentrópico', sym: 'η', unit: '—', dflt: 1, min: 0, max: 1, step: 0.01 }
     ],
-    compute(ins, outs, params, env) {
-      const e = ins.in, s = outs.out;
-      const W = e.m * (s.h - e.h);
-      const Q = 0;
-      const dSg = e.m * (s.s - e.s);
-      const Xd = env.T0 * dSg;
-      const psi_gained = e.m * (s.psi - e.psi);
-      const eta_II = W > 0 ? psi_gained / W : null;
-      return { Q, W: -W, dSg, Xd, eta_II, psi_gained, psi_input_W: W };
-    }
+    info: 'Adiabática · recibe trabajo. <code>W = ṁ(h<sub>s</sub> − h<sub>e</sub>)</code>'
   },
   valve: {
-    name: 'Válvula (estrangulación)', icon: 'M6 8 L6 24 L16 16 L26 24 L26 8 L16 16 Z',
-    inputs: [{key: 'in', label: 'Entrada (alta P)'}],
-    outputs: [{key: 'out', label: 'Salida (baja P)'}],
+    name: 'Válvula', short: 'VAL', category: 'misc',
+    icon: '<path d="M6 8 L6 24 L16 16 L26 24 L26 8 L16 16 Z"/>',
+    inputs:  [{ key: 'in',  label: 'Entrada (alta P)', side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'out', label: 'Salida (baja P)',  side: 'R', pos: 0.5 }],
     params: [],
-    // Adiabática y sin trabajo. h_in = h_out
-    compute(ins, outs, params, env) {
-      const e = ins.in, s = outs.out;
-      const Q = 0, W = 0;
-      const dSg = e.m * (s.s - e.s);
-      const Xd = env.T0 * dSg;
-      // Verificación de estrangulación isoentálpica
-      const dh_check = Math.abs(s.h - e.h);
-      return { Q, W, dSg, Xd, eta_II: 0, psi_lost: e.m * (e.psi - s.psi), dh_check };
-    }
+    info: 'Estrangulación isoentálpica: <code>h<sub>e</sub> = h<sub>s</sub></code>, adiabática y sin trabajo.'
   },
   heatex: {
-    name: 'Intercambiador de calor', icon: 'M9 14 L9 18 M14 14 L14 18 M19 14 L19 18 M24 14 L24 18',
-    inputs: [{key: 'hot_in', label: 'Caliente entra'}, {key: 'cold_in', label: 'Frío entra'}],
-    outputs: [{key: 'hot_out', label: 'Caliente sale'}, {key: 'cold_out', label: 'Frío sale'}],
+    name: 'Intercambiador', short: 'HX', category: 'hx',
+    icon: '<rect x="5" y="11" width="22" height="10" rx="2"/><path d="M9 13 L9 19 M14 13 L14 19 M19 13 L19 19 M24 13 L24 19" stroke-width="1.4"/>',
+    inputs:  [{ key: 'hot_in',  label: 'Caliente entra', side: 'L', pos: 0.30 }, { key: 'cold_in',  label: 'Frío entra', side: 'L', pos: 0.70 }],
+    outputs: [{ key: 'hot_out', label: 'Caliente sale',  side: 'R', pos: 0.30 }, { key: 'cold_out', label: 'Frío sale',  side: 'R', pos: 0.70 }],
     params: [],
-    // Q = 0 desde el sistema combinado (es interno entre las dos corrientes)
-    // ΔS_g = sum(ṁ_s·s_s) − sum(ṁ_e·s_e)
-    compute(ins, outs, params, env) {
-      const hi = ins.hot_in, ho = outs.hot_out, ci = ins.cold_in, co = outs.cold_out;
-      const Q_hot = hi.m * (ho.h - hi.h);  // calor cedido por la corriente caliente (negativo)
-      const Q_cold = ci.m * (co.h - ci.h);  // calor recibido por fría (positivo)
-      const balance = Q_hot + Q_cold;  // debería ser 0
-      const W = 0;
-      const Q = 0;  // global del componente
-      const dSg = (hi.m * (ho.s - hi.s)) + (ci.m * (co.s - ci.s));
-      const Xd = env.T0 * dSg;
-      const psi_gained_cold = ci.m * (co.psi - ci.psi);
-      const psi_lost_hot = hi.m * (hi.psi - ho.psi);
-      const eta_II = psi_lost_hot > 0 ? psi_gained_cold / psi_lost_hot : null;
-      return { Q, W, dSg, Xd, eta_II, balance, psi_gained_cold, psi_lost_hot };
-    }
+    info: 'Sin trabajo · adiabático respecto al exterior. Balance interno: <code>ṁ<sub>h</sub>·Δh<sub>h</sub> + ṁ<sub>c</sub>·Δh<sub>c</sub> = 0</code>.'
   },
   mixer: {
-    name: 'Mezclador (cámara de mezcla)', icon: 'M4 8 L14 16 L4 24 M14 16 L28 16',
-    inputs: [{key: 'in1', label: 'Entrada 1'}, {key: 'in2', label: 'Entrada 2'}],
-    outputs: [{key: 'out', label: 'Salida (mezcla)'}],
+    name: 'Mezclador', short: 'MIX', category: 'misc',
+    icon: '<path d="M5 8 L15 16 L5 24"/><path d="M15 16 L27 16"/>',
+    inputs:  [{ key: 'in1', label: 'Entrada 1', side: 'L', pos: 0.30 }, { key: 'in2', label: 'Entrada 2', side: 'L', pos: 0.70 }],
+    outputs: [{ key: 'out', label: 'Salida (mezcla)', side: 'R', pos: 0.5 }],
     params: [],
-    // Adiabático normalmente. ṁ_o = ṁ_1 + ṁ_2. ṁ_1·h_1 + ṁ_2·h_2 = ṁ_o·h_o
-    compute(ins, outs, params, env) {
-      const e1 = ins.in1, e2 = ins.in2, s = outs.out;
-      const m_balance = (e1.m + e2.m) - s.m;
-      const h_balance = (e1.m * e1.h + e2.m * e2.h) - s.m * s.h;
-      const Q = 0, W = 0;
-      const dSg = s.m * s.s - e1.m * e1.s - e2.m * e2.s;
-      const Xd = env.T0 * dSg;
-      return { Q, W, dSg, Xd, eta_II: null, m_balance, h_balance, psi_lost: (e1.m * e1.psi + e2.m * e2.psi) - s.m * s.psi };
-    }
+    info: 'Adiabático · sin trabajo. <code>ṁ<sub>1</sub>h<sub>1</sub> + ṁ<sub>2</sub>h<sub>2</sub> = ṁ<sub>o</sub>h<sub>o</sub></code>'
   },
   separator: {
-    name: 'Separador (tanque flash)', icon: 'M4 16 L14 16 L24 8 M14 16 L24 24',
-    inputs: [{key: 'in', label: 'Entrada (mezcla)'}],
-    outputs: [{key: 'vap', label: 'Vapor'}, {key: 'liq', label: 'Líquido'}],
+    name: 'Separador', short: 'SEP', category: 'misc',
+    icon: '<path d="M5 16 L15 16 L25 9"/><path d="M15 16 L25 23"/>',
+    inputs:  [{ key: 'in', label: 'Entrada (mezcla)', side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'vap', label: 'Vapor', side: 'R', pos: 0.30 }, { key: 'liq', label: 'Líquido', side: 'R', pos: 0.70 }],
     params: [],
-    compute(ins, outs, params, env) {
-      const e = ins.in, sv = outs.vap, sl = outs.liq;
-      const m_balance = e.m - sv.m - sl.m;
-      const h_balance = e.m * e.h - sv.m * sv.h - sl.m * sl.h;
-      const Q = 0, W = 0;
-      const dSg = (sv.m * sv.s + sl.m * sl.s) - e.m * e.s;
-      const Xd = env.T0 * dSg;
-      return { Q, W, dSg, Xd, eta_II: null, m_balance, h_balance };
-    }
+    info: 'Tanque flash · separa fases por estrangulación previa.'
   },
   boiler: {
-    name: 'Caldera / Generador de vapor', icon: 'M11 16 L16 11 L21 16 L16 21 Z',
-    inputs: [{key: 'in', label: 'Entrada (líquido)'}],
-    outputs: [{key: 'out', label: 'Salida (vapor)'}],
+    name: 'Caldera', short: 'CAL', category: 'hx',
+    icon: '<rect x="6" y="6" width="20" height="20" rx="3"/><path d="M11 16 L16 11 L21 16 L16 21 Z" fill="currentColor" fill-opacity="0.15"/>',
+    inputs:  [{ key: 'in',  label: 'Entrada (líquido)', side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'out', label: 'Salida (vapor)',    side: 'R', pos: 0.5 }],
     params: [
-      {key: 'T_F', label: 'T fuente caliente', unit: 'K', default: '', optional: true}
+      { key: 'T_F', label: 'T fuente caliente', sym: 'T<sub>F</sub>', unit: 'K', dflt: '', step: 1, optional: true }
     ],
-    // Q se calcula del balance. ΔS_g = ṁ(s_s−s_e) − Q/T_F
-    compute(ins, outs, params, env) {
-      const e = ins.in, s = outs.out;
-      const W = 0;
-      const Q = e.m * (s.h - e.h);  // recibe calor (positivo)
-      const T_F = params.T_F ? +params.T_F : null;
-      let dSg = null, Xd = null, eta_II = null;
-      if (T_F && T_F > 0) {
-        dSg = e.m * (s.s - e.s) - Q / T_F;
-        Xd = env.T0 * dSg;
-        const psi_gained = e.m * (s.psi - e.psi);
-        const psi_provided = Q * (1 - env.T0 / T_F);
-        eta_II = psi_provided > 0 ? psi_gained / psi_provided : null;
-      } else {
-        dSg = e.m * (s.s - e.s);
-        Xd = env.T0 * dSg;
-      }
-      return { Q, W, dSg, Xd, eta_II, T_F };
-    }
+    info: 'Recibe Q de una fuente a T<sub>F</sub>. <code>Q = ṁ(h<sub>s</sub> − h<sub>e</sub>)</code>'
   },
   condenser: {
-    name: 'Condensador', icon: 'M10 16 L22 16 M16 10 L16 22',
-    inputs: [{key: 'in', label: 'Entrada (vapor)'}],
-    outputs: [{key: 'out', label: 'Salida (líquido)'}],
+    name: 'Condensador', short: 'CND', category: 'hx',
+    icon: '<rect x="6" y="6" width="20" height="20" rx="3"/><path d="M10 16 L22 16 M16 10 L16 22" stroke-width="1.4"/>',
+    inputs:  [{ key: 'in',  label: 'Entrada (vapor)',   side: 'L', pos: 0.5 }],
+    outputs: [{ key: 'out', label: 'Salida (líquido)',  side: 'R', pos: 0.5 }],
     params: [
-      {key: 'T_F', label: 'T fuente fría', unit: 'K', default: '', optional: true}
+      { key: 'T_F', label: 'T fuente fría', sym: 'T<sub>F</sub>', unit: 'K', dflt: '', step: 1, optional: true }
     ],
-    compute(ins, outs, params, env) {
-      const e = ins.in, s = outs.out;
-      const W = 0;
-      const Q = e.m * (s.h - e.h);  // cede calor (negativo)
-      const T_F = params.T_F ? +params.T_F : null;
-      let dSg = null, Xd = null, eta_II = null;
-      if (T_F && T_F > 0) {
-        dSg = e.m * (s.s - e.s) - Q / T_F;
-        Xd = env.T0 * dSg;
-      } else {
-        dSg = e.m * (s.s - e.s);
-        Xd = env.T0 * dSg;
-      }
-      return { Q, W, dSg, Xd, eta_II, T_F };
-    }
+    info: 'Cede Q a una fuente a T<sub>F</sub>. <code>Q = ṁ(h<sub>s</sub> − h<sub>e</sub>) &lt; 0</code>'
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-//  STREAM HELPERS
-// ═══════════════════════════════════════════════════════════════════════
-function readEnv() {
-  env.T0 = +document.getElementById('envT0').value || 300.15;
-  env.P0 = +document.getElementById('envP0').value || 101.3;
-  env.h0 = +document.getElementById('envH0').value || 113.2;
-  env.s0 = +document.getElementById('envS0').value || 0.3954;
+const COMP_ORDER = {
+  rot:  ['turbine', 'compressor', 'pump'],
+  hx:   ['heatex', 'boiler', 'condenser'],
+  misc: ['valve', 'mixer', 'separator']
+};
+
+/* dimensiones por componente: ancho/alto base */
+function compSize(type) {
+  const def = COMP_DEFS[type];
+  const nL = (def.inputs.filter(p => p.side === 'L').length + def.outputs.filter(p => p.side === 'L').length);
+  const nR = (def.inputs.filter(p => p.side === 'R').length + def.outputs.filter(p => p.side === 'R').length);
+  const maxSide = Math.max(nL, nR, 1);
+  const w = type === 'heatex' ? 130 : 110;
+  const h = maxSide >= 2 ? 86 : 70;
+  return { w, h };
 }
 
-function computeStreamExergy(stream) {
-  const psi = (stream.h - env.h0) - env.T0 * (stream.s - env.s0);
-  const Psi = stream.m * psi;
-  return { psi, Psi };
+function portPos(type, key) {
+  const def = COMP_DEFS[type];
+  const all = [...def.inputs.map(p => ({ ...p, kind: 'in' })), ...def.outputs.map(p => ({ ...p, kind: 'out' }))];
+  const port = all.find(p => p.key === key);
+  if (!port) return null;
+  const { w, h } = compSize(type);
+  const x = port.side === 'L' ? 0 : w;
+  const y = port.pos * h;
+  return { x, y, kind: port.kind, side: port.side, label: port.label };
 }
 
-function getStream(id) {
-  const s = streams.find(s => s.id === id);
-  if (!s) return null;
-  const ex = computeStreamExergy(s);
-  return { ...s, psi: ex.psi, Psi: ex.Psi };
+/* ════════════════════════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════════════════════════ */
+const STATE = {
+  components: [],   // { id, type, x, y, params: {...} }
+  streams: [],      // { id, num, fromComp, fromPort, toComp, toPort, props: { T, P, h, s, x, m, modes: {...} } }
+  selection: null,  // { kind: 'comp'|'stream', id }
+  view: { zoom: 1, panX: 0, panY: 0 },
+  nextStreamNum: 1,
+  nextCompNum: {}
+};
+
+const STORAGE_KEY = 'transfo-editor-v1';
+
+function saveState() {
+  try {
+    const data = {
+      components: STATE.components,
+      streams: STATE.streams,
+      view: STATE.view,
+      nextStreamNum: STATE.nextStreamNum,
+      nextCompNum: STATE.nextCompNum
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) { /* quota o privacidad */ }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.components) STATE.components = data.components;
+    if (data.streams) STATE.streams = data.streams;
+    if (data.view) STATE.view = data.view;
+    if (data.nextStreamNum) STATE.nextStreamNum = data.nextStreamNum;
+    if (data.nextCompNum) STATE.nextCompNum = data.nextCompNum;
+  } catch (e) { /* corrupted */ }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  RENDER STREAMS TABLE
-// ═══════════════════════════════════════════════════════════════════════
-function renderStreams() {
-  const tbody = document.getElementById('streamsBody');
-  tbody.innerHTML = '';
-  if (streams.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--t-3)">No hay corrientes. Agregá al menos una para empezar.</td></tr>`;
-    return;
+function getComp(id)   { return STATE.components.find(c => c.id === id); }
+function getStream(id) { return STATE.streams.find(s => s.id === id); }
+function streamFromPort(compId, portKey) {
+  return STATE.streams.find(s => s.fromComp === compId && s.fromPort === portKey);
+}
+function streamToPort(compId, portKey) {
+  return STATE.streams.find(s => s.toComp === compId && s.toPort === portKey);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PALETTE RENDER
+   ════════════════════════════════════════════════════════════════ */
+function renderPalette() {
+  const targets = { rot: 'paletteRot', hx: 'paletteHX', misc: 'paletteMisc' };
+  for (const cat in targets) {
+    const wrap = $(targets[cat]);
+    wrap.innerHTML = '';
+    COMP_ORDER[cat].forEach(type => {
+      const def = COMP_DEFS[type];
+      const btn = document.createElement('button');
+      btn.className = 'pal-btn';
+      btn.draggable = true;
+      btn.dataset.compType = type;
+      btn.title = def.name;
+      btn.innerHTML = `<span class="pal-btn-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${def.icon}</svg></span><span>${def.name}</span>`;
+      btn.addEventListener('dragstart', (e) => {
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', type);
+        btn.classList.add('dragging');
+      });
+      btn.addEventListener('dragend', () => btn.classList.remove('dragging'));
+      wrap.appendChild(btn);
+    });
   }
-  streams.forEach(s => {
-    const ex = computeStreamExergy(s);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="stream-id">${s.id}</td>
-      <td class="stream-name"><input value="${s.name||''}" placeholder="ej: vapor sobrecal." onchange="updateStreamField(${s.id},'name',this.value)"></td>
-      <td><input type="number" step="any" value="${s.T??''}" onchange="updateStreamField(${s.id},'T',this.value)" placeholder=""></td>
-      <td><input type="number" step="any" value="${s.P??''}" onchange="updateStreamField(${s.id},'P',this.value)" placeholder=""></td>
-      <td><input type="number" step="any" value="${s.h??''}" onchange="updateStreamField(${s.id},'h',this.value)" placeholder=""></td>
-      <td><input type="number" step="any" value="${s.s??''}" onchange="updateStreamField(${s.id},'s',this.value)" placeholder=""></td>
-      <td><input type="number" step="any" value="${s.x??''}" onchange="updateStreamField(${s.id},'x',this.value)" placeholder=""></td>
-      <td><input type="number" step="any" value="${s.m??''}" onchange="updateStreamField(${s.id},'m',this.value)" placeholder=""></td>
-      <td><input class="calc" readonly value="${isFinite(ex.psi) ? ex.psi.toFixed(2) : '—'}"></td>
-      <td><input class="calc" readonly value="${isFinite(ex.Psi) ? ex.Psi.toFixed(2) : '—'}"></td>
-      <td class="row-actions"><button class="row-btn" onclick="deleteStream(${s.id})" title="Eliminar">×</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
-function addStream() {
-  streams.push({ id: nextStreamId++, name: '', T: null, P: null, h: null, s: null, x: null, m: null });
-  renderStreams();
-  renderComponents();
-  recalcAll();
+/* ════════════════════════════════════════════════════════════════
+   CANVAS RENDER
+   ════════════════════════════════════════════════════════════════ */
+const canvas = $('canvas');
+const canvasWrap = $('canvasWrap');
+const layerStreams = $('layerStreams');
+const layerComps = $('layerComps');
+const layerOverlay = $('layerOverlay');
+
+let canvasViewBox = { x: 0, y: 0, w: 1200, h: 720 };
+
+function updateViewBox() {
+  // ViewBox depende de zoom y pan
+  const rect = canvasWrap.getBoundingClientRect();
+  const aspect = rect.width / rect.height;
+  const baseH = 720;
+  const baseW = baseH * aspect;
+  const z = STATE.view.zoom;
+  const w = baseW / z;
+  const h = baseH / z;
+  canvasViewBox = { x: -STATE.view.panX, y: -STATE.view.panY, w, h };
+  canvas.setAttribute('viewBox', `${canvasViewBox.x} ${canvasViewBox.y} ${canvasViewBox.w} ${canvasViewBox.h}`);
+  $('zoomLabel').textContent = Math.round(z * 100) + '%';
 }
 
-function deleteStream(id) {
-  if (!confirm('¿Eliminar corriente ' + id + '?')) return;
-  streams = streams.filter(s => s.id !== id);
-  // Remove references in components
-  components.forEach(c => {
-    Object.keys(c.ins).forEach(k => { if (c.ins[k] === id) c.ins[k] = null; });
-    Object.keys(c.outs).forEach(k => { if (c.outs[k] === id) c.outs[k] = null; });
-  });
-  renderStreams();
-  renderComponents();
-  recalcAll();
+function clientToCanvas(clientX, clientY) {
+  const rect = canvasWrap.getBoundingClientRect();
+  const xR = (clientX - rect.left) / rect.width;
+  const yR = (clientY - rect.top) / rect.height;
+  return {
+    x: canvasViewBox.x + xR * canvasViewBox.w,
+    y: canvasViewBox.y + yR * canvasViewBox.h
+  };
 }
 
-function updateStreamField(id, field, val) {
-  const s = streams.find(s => s.id === id);
-  if (!s) return;
-  if (field === 'name') s.name = val;
-  else s[field] = val === '' ? null : +val;
-  renderStreams();
-  renderComponents();
-  recalcAll();
+function renderAll() {
+  // empty state
+  $('canvasEmpty').classList.toggle('hidden', STATE.components.length > 0);
+  // streams
+  layerStreams.innerHTML = '';
+  STATE.streams.forEach(renderStream);
+  // components
+  layerComps.innerHTML = '';
+  STATE.components.forEach(renderComp);
+  // overlay limpia salvo si hay preview activa
+  // (no la borramos acá para no pisar el preview de conexión)
+  renderProps();
+  saveState();
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  RENDER COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════
-function renderComponents() {
-  const list = document.getElementById('compList');
-  list.innerHTML = '';
-  if (components.length === 0) {
-    list.innerHTML = `<div class="empty-state">Todavía no hay componentes. Agregá uno desde la <em>biblioteca</em> de arriba.</div>`;
-    return;
-  }
-  components.forEach(c => {
-    const def = COMP_DEFS[c.type];
-    const card = document.createElement('div');
-    card.className = 'comp-card';
-    card.id = 'comp-' + c.id;
+function renderComp(c) {
+  const def = COMP_DEFS[c.type];
+  const { w, h } = compSize(c.type);
+  const isSel = STATE.selection && STATE.selection.kind === 'comp' && STATE.selection.id === c.id;
 
-    let inputsHtml = '';
-    def.inputs.forEach(inp => {
-      inputsHtml += `<div class="comp-field">
-        <span class="comp-field-label">${inp.label}</span>
-        <select onchange="updateCompField(${c.id},'ins.${inp.key}',this.value)">
-          <option value="">— seleccionar —</option>
-          ${streams.map(s => `<option value="${s.id}" ${c.ins[inp.key]==s.id?'selected':''}>#${s.id}${s.name?' · '+s.name:''}</option>`).join('')}
-        </select>
-      </div>`;
+  const g = svgEl('g', { class: 'comp' + (isSel ? ' selected' : ''), 'data-comp-id': c.id, transform: `translate(${c.x} ${c.y})` });
+
+  // body
+  const body = svgEl('rect', { class: 'comp-body', x: 0, y: 0, width: w, height: h, rx: 10, ry: 10 });
+  g.appendChild(body);
+
+  // icon centered
+  const iconG = svgEl('g', { class: 'comp-icon', transform: `translate(${(w - 32) / 2} ${(h - 32) / 2 - 6})` });
+  iconG.innerHTML = def.icon;
+  g.appendChild(iconG);
+
+  // label nombre + número
+  const num = c.num != null ? c.num : '?';
+  const labMain = svgEl('text', { class: 'comp-label-sub', x: w / 2, y: h - 20, text: `${def.short} · ${num}` });
+  g.appendChild(labMain);
+
+  // ports
+  [...def.inputs.map(p => ({ ...p, kind: 'in' })), ...def.outputs.map(p => ({ ...p, kind: 'out' }))].forEach(p => {
+    const px = p.side === 'L' ? 0 : w;
+    const py = p.pos * h;
+    const connected = p.kind === 'in' ? !!streamToPort(c.id, p.key) : !!streamFromPort(c.id, p.key);
+    const port = svgEl('circle', {
+      class: `port ${p.kind}` + (connected ? ' connected' : ''),
+      cx: px, cy: py, r: 5.5,
+      'data-comp-id': c.id, 'data-port-key': p.key, 'data-port-kind': p.kind
     });
-    let outputsHtml = '';
-    def.outputs.forEach(out => {
-      outputsHtml += `<div class="comp-field">
-        <span class="comp-field-label">${out.label}</span>
-        <select onchange="updateCompField(${c.id},'outs.${out.key}',this.value)">
-          <option value="">— seleccionar —</option>
-          ${streams.map(s => `<option value="${s.id}" ${c.outs[out.key]==s.id?'selected':''}>#${s.id}${s.name?' · '+s.name:''}</option>`).join('')}
-        </select>
-      </div>`;
-    });
-    let paramsHtml = '';
-    def.params.forEach(p => {
-      paramsHtml += `<div class="comp-field">
-        <span class="comp-field-label">${p.label}${p.unit?' ['+p.unit+']':''}</span>
-        <div class="comp-field-row">
-          <input type="number" step="${p.step||'any'}" value="${c.params[p.key]??''}" placeholder="${p.optional?'opcional':''}" onchange="updateCompField(${c.id},'params.${p.key}',this.value)">
-          ${p.unit?`<span class="comp-field-unit">${p.unit}</span>`:''}
-        </div>
-      </div>`;
-    });
-
-    card.innerHTML = `
-      <div class="comp-head">
-        <div class="comp-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="${def.icon}"/></svg></div>
-        <div style="flex:1">
-          <input class="comp-title-input" value="${c.name}" onchange="updateCompField(${c.id},'name',this.value)">
-          <div class="comp-type">${def.name}</div>
-        </div>
-        <button class="comp-del" onclick="deleteComponent(${c.id})">eliminar</button>
-      </div>
-      <div class="comp-grid">
-        ${inputsHtml}
-        ${outputsHtml}
-        ${paramsHtml}
-      </div>
-      <div class="comp-result" id="compResult-${c.id}"></div>
-    `;
-    list.appendChild(card);
+    // label tooltip-ish
+    port.appendChild(svgEl('title', { text: p.label }));
+    g.appendChild(port);
   });
+
+  layerComps.appendChild(g);
 }
 
-function addComponent(type) {
+function streamPath(s) {
+  // Devuelve d, mx, my (punto medio para badge del número)
+  const cf = getComp(s.fromComp);
+  const ct = getComp(s.toComp);
+  if (!cf || !ct) return null;
+  const pf = portPos(cf.type, s.fromPort);
+  const pt = portPos(ct.type, s.toPort);
+  if (!pf || !pt) return null;
+  const x1 = cf.x + pf.x, y1 = cf.y + pf.y;
+  const x2 = ct.x + pt.x, y2 = ct.y + pt.y;
+  // bezier horizontal
+  const dx = Math.max(40, Math.abs(x2 - x1) * 0.5);
+  const c1x = x1 + (pf.side === 'R' ? dx : -dx);
+  const c2x = x2 + (pt.side === 'L' ? -dx : dx);
+  const d = `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
+  // mid (aprox 0.5 t en bezier cúbica)
+  const mx = 0.125 * x1 + 0.375 * c1x + 0.375 * c2x + 0.125 * x2;
+  const my = 0.125 * y1 + 0.375 * y1 + 0.375 * y2 + 0.125 * y2;
+  return { d, x1, y1, x2, y2, mx, my };
+}
+
+function renderStream(s) {
+  const geo = streamPath(s);
+  if (!geo) return;
+  const isSel = STATE.selection && STATE.selection.kind === 'stream' && STATE.selection.id === s.id;
+  const g = svgEl('g', { 'data-stream-id': s.id });
+
+  // hit area (transparente, ancha)
+  const hit = svgEl('path', { class: 'stream-hit', d: geo.d, 'data-stream-id': s.id });
+  g.appendChild(hit);
+
+  // visible
+  const path = svgEl('path', {
+    class: 'stream' + (isSel ? ' selected' : ''),
+    d: geo.d,
+    'marker-end': isSel ? 'url(#arrowheadSel)' : 'url(#arrowhead)',
+    'data-stream-id': s.id,
+    style: 'color: var(--t-2)'
+  });
+  g.appendChild(path);
+
+  // num badge
+  const r = 11;
+  const bg = svgEl('circle', {
+    class: 'stream-num-bg' + (isSel ? ' selected' : ''),
+    cx: geo.mx, cy: geo.my, r,
+    'data-stream-id': s.id,
+    stroke: isSel ? 'var(--a)' : 'var(--b-2)'
+  });
+  g.appendChild(bg);
+  const txt = svgEl('text', { class: 'stream-num-text', x: geo.mx, y: geo.my + 0.5, text: s.num });
+  g.appendChild(txt);
+
+  layerStreams.appendChild(g);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ADD / DELETE
+   ════════════════════════════════════════════════════════════════ */
+function addComponent(type, x, y) {
   const def = COMP_DEFS[type];
   if (!def) return;
-  const ins = {}, outs = {}, params = {};
-  def.inputs.forEach(i => ins[i.key] = null);
-  def.outputs.forEach(o => outs[o.key] = null);
-  def.params.forEach(p => params[p.key] = p.default !== undefined ? p.default : '');
-  components.push({
-    id: nextCompId++,
+  STATE.nextCompNum[type] = (STATE.nextCompNum[type] || 0) + 1;
+  const params = {};
+  def.params.forEach(p => params[p.key] = p.dflt);
+  const { w, h } = compSize(type);
+  const c = {
+    id: 'c_' + uid(),
     type,
-    name: def.name,
-    ins,
-    outs,
+    num: STATE.nextCompNum[type],
+    x: x - w / 2,
+    y: y - h / 2,
     params
-  });
-  renderComponents();
-  recalcAll();
+  };
+  STATE.components.push(c);
+  STATE.selection = { kind: 'comp', id: c.id };
+  renderAll();
 }
 
 function deleteComponent(id) {
-  components = components.filter(c => c.id !== id);
-  renderComponents();
-  recalcAll();
+  STATE.components = STATE.components.filter(c => c.id !== id);
+  STATE.streams = STATE.streams.filter(s => s.fromComp !== id && s.toComp !== id);
+  if (STATE.selection && STATE.selection.id === id) STATE.selection = null;
+  renumberStreams();
+  renderAll();
 }
 
-function updateCompField(id, path, val) {
-  const c = components.find(c => c.id === id);
-  if (!c) return;
-  const parts = path.split('.');
-  if (parts.length === 1) {
-    c[parts[0]] = val;
-  } else {
-    c[parts[0]][parts[1]] = (parts[0] === 'params') ? val : (val === '' ? null : +val);
+function deleteStream(id) {
+  STATE.streams = STATE.streams.filter(s => s.id !== id);
+  if (STATE.selection && STATE.selection.id === id) STATE.selection = null;
+  renumberStreams();
+  renderAll();
+}
+
+function renumberStreams() {
+  STATE.streams.forEach((s, i) => s.num = i + 1);
+  STATE.nextStreamNum = STATE.streams.length + 1;
+}
+
+function addStream(fromComp, fromPort, toComp, toPort) {
+  // checks
+  if (fromComp === toComp) {
+    toast('No se puede conectar un componente a sí mismo', 'warn');
+    return null;
   }
-  recalcAll();
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  CALCULATION ENGINE
-// ═══════════════════════════════════════════════════════════════════════
-function recalcAll() {
-  readEnv();
-  // Re-render streams to update psi/Psi
-  renderStreams();
-
-  let totalQ = 0, totalW = 0, totalSgen = 0, totalXd = 0;
-  let psiGainedTotal = 0, psiLostTotal = 0;
-  let warnings = [];
-
-  components.forEach(c => {
-    const def = COMP_DEFS[c.type];
-    const ins = {}, outs = {};
-    let allOk = true;
-    def.inputs.forEach(i => {
-      const id = c.ins[i.key];
-      if (!id) { allOk = false; return; }
-      const s = getStream(+id);
-      if (!s) { allOk = false; return; }
-      // require T,h,s,m at minimum
-      if (s.h == null || s.s == null || s.m == null) {
-        warnings.push(`${c.name} (#${c.id}): corriente #${id} (${i.label}) no tiene h, s o ṁ definidos`);
-        allOk = false; return;
-      }
-      ins[i.key] = s;
-    });
-    def.outputs.forEach(o => {
-      const id = c.outs[o.key];
-      if (!id) { allOk = false; return; }
-      const s = getStream(+id);
-      if (!s) { allOk = false; return; }
-      if (s.h == null || s.s == null || s.m == null) {
-        warnings.push(`${c.name} (#${c.id}): corriente #${id} (${o.label}) no tiene h, s o ṁ definidos`);
-        allOk = false; return;
-      }
-      outs[o.key] = s;
-    });
-
-    const resultEl = document.getElementById('compResult-' + c.id);
-    if (!resultEl) return;
-
-    if (!allOk) {
-      resultEl.innerHTML = `<div class="comp-result-row"><span class="comp-result-label" style="color:var(--t-3);font-style:italic">Asigná las corrientes y completá h, s, ṁ para calcular</span></div>`;
-      return;
-    }
-
-    const r = def.compute(ins, outs, c.params, env);
-    let html = '';
-    if (r.Q !== undefined) html += rowHtml('Q', r.Q, 'kW');
-    if (r.W !== undefined) html += rowHtml('W', r.W, 'kW');
-    if (r.dSg !== undefined && r.dSg !== null) html += rowHtml('ΔS_g', r.dSg, 'kW/K', r.dSg < -0.0001 ? 'warn' : (r.dSg < 0.0001 ? '' : null));
-    if (r.Xd !== undefined && r.Xd !== null) html += rowHtml('X_D · exergía destruida', r.Xd, 'kW', r.Xd < -0.0001 ? 'warn' : null);
-    if (r.eta_II !== null && r.eta_II !== undefined && isFinite(r.eta_II)) html += rowHtml('η<sub>II</sub>', r.eta_II * 100, '%');
-    if (r.m_balance !== undefined) html += rowHtml('Balance de masa Σṁ_e − Σṁ_s', r.m_balance, 'kg/s', Math.abs(r.m_balance) > 0.001 ? 'warn' : 'pos');
-    if (r.h_balance !== undefined) html += rowHtml('Balance de energía Σṁh_e − Σṁh_s', r.h_balance, 'kW', Math.abs(r.h_balance) > 0.5 ? 'warn' : 'pos');
-    if (r.balance !== undefined) html += rowHtml('Balance de energía Q_caliente + Q_frío', r.balance, 'kW', Math.abs(r.balance) > 0.5 ? 'warn' : 'pos');
-    if (r.dh_check !== undefined) html += rowHtml('Δh (debería ser 0)', r.dh_check, 'kJ/kg', r.dh_check > 0.5 ? 'warn' : 'pos');
-    resultEl.innerHTML = html;
-
-    // accumulate totals
-    if (r.Q !== undefined) totalQ += r.Q;
-    if (r.W !== undefined) totalW += r.W;
-    if (r.dSg !== undefined && r.dSg !== null && isFinite(r.dSg)) totalSgen += r.dSg;
-    if (r.Xd !== undefined && r.Xd !== null && isFinite(r.Xd)) totalXd += r.Xd;
-
-    // Negative ΔS_g warning
-    if (r.dSg !== undefined && r.dSg !== null && r.dSg < -0.001) {
-      warnings.push(`${c.name} (#${c.id}): ΔS_g = ${fmt(r.dSg,4)} kW/K < 0 · violación del 2° principio`);
-    }
-  });
-
-  // Update global tiles
-  setTileVal('resQnet', totalQ, 'kW', 2);
-  setTileVal('resWnet', totalW, 'kW', 2);
-  setTileVal('resSgen', totalSgen, 'kW/K', 4, true);
-  setTileVal('resXdes', totalXd, 'kW', 2, true);
-
-  // Verification
-  const verifVal = env.T0 * totalSgen;
-  const verifDiff = Math.abs(verifVal - totalXd);
-  document.getElementById('resVerif').innerHTML = `${fmt(verifVal,2)}<span class="unit">kW</span>`;
-  document.getElementById('resVerifExtra').textContent = verifDiff < 0.01 ? '✓ T₀·ΔS_g coincide con X_D' : `Diferencia: ${fmt(verifDiff,4)} kW`;
-
-  // Build balance table
-  buildBalanceTable();
-
-  // Global eta_II: requires identifying inputs and outputs of the whole process
-  computeGlobalEtaII();
-
-  // Global status
-  const status = document.getElementById('globalStatus');
-  const statusText = document.getElementById('globalStatusText');
-  if (warnings.length > 0) {
-    status.style.display = 'flex';
-    status.className = 'status-bar warn';
-    statusText.innerHTML = `<strong>Advertencias:</strong> ${warnings.slice(0,3).join(' · ')}${warnings.length>3?' (+'+(warnings.length-3)+' más)':''}`;
-  } else if (components.length > 0 && streams.length > 0) {
-    status.style.display = 'flex';
-    status.className = 'status-bar ok';
-    statusText.innerHTML = `<strong>Proceso consistente:</strong> ${components.length} componente(s) · ${streams.length} corriente(s) · ΔS_g = ${fmt(totalSgen,4)} kW/K`;
-  } else {
-    status.style.display = 'none';
+  // ¿ya hay algo conectado a ese puerto destino? (un puerto solo recibe una corriente)
+  if (streamToPort(toComp, toPort)) {
+    toast('Ese puerto de entrada ya está conectado', 'warn');
+    return null;
   }
-
-  drawDiagram();
-}
-
-function rowHtml(label, val, unit, cls) {
-  if (cls === undefined) {
-    cls = (val > 0.001) ? 'pos' : (val < -0.001 ? 'neg' : '');
-    if (label.indexOf('ΔS_g')!==-1 || label.indexOf('X_D')!==-1) {
-      cls = (val >= -0.001) ? '' : 'warn';
-    }
-    if (label.indexOf('η')!==-1) cls = '';
-    if (label.indexOf('Balance')!==-1) cls = Math.abs(val) < 0.5 ? 'pos' : 'warn';
+  if (streamFromPort(fromComp, fromPort)) {
+    toast('Ese puerto de salida ya está conectado', 'warn');
+    return null;
   }
-  return `<div class="comp-result-row"><span class="comp-result-label">${label}</span><span class="comp-result-val ${cls||''}">${fmt(val, label.indexOf('ΔS_g')!==-1?4:(label.indexOf('η')!==-1?1:2))} ${unit}</span></div>`;
+  const s = {
+    id: 's_' + uid(),
+    num: STATE.nextStreamNum++,
+    fromComp, fromPort, toComp, toPort,
+    props: {
+      T: '', P: '', h: '', s: '', x: '', m: '',
+      modes: { T: 'input', P: 'input', h: 'input', s: 'input', x: 'input', m: 'input' }
+    }
+  };
+  STATE.streams.push(s);
+  STATE.selection = { kind: 'stream', id: s.id };
+  renderAll();
+  return s;
 }
 
-function setTileVal(id, val, unit, dec, sign) {
-  const el = document.getElementById(id);
-  if (!isFinite(val)) { el.innerHTML = `—<span class="unit">${unit}</span>`; el.className = 'r-tile-val'; return; }
-  const formatted = sign ? fmtSign(val, dec) : fmt(val, dec);
-  el.innerHTML = `${formatted}<span class="unit">${unit}</span>`;
-  el.className = 'r-tile-val ' + (val > 0.001 ? 'pos' : (val < -0.001 ? 'neg' : ''));
-}
+/* ════════════════════════════════════════════════════════════════
+   POINTER INTERACTION
+   ════════════════════════════════════════════════════════════════ */
+let drag = null;       // { kind: 'comp'|'pan'|'connect', ... }
 
-function fmt(v, dec=0) {
-  if (!isFinite(v)) return '—';
-  return v.toFixed(dec).replace('.',',');
-}
-function fmtSign(v, dec=0) {
-  if (!isFinite(v)) return '—';
-  return (v>=0?'+':'') + v.toFixed(dec).replace('.',',');
-}
+canvas.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-function buildBalanceTable() {
-  const tbody = document.getElementById('balanceBody');
-  tbody.innerHTML = '';
-  if (components.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t-3)">No hay componentes</td></tr>`;
+function onPointerDown(e) {
+  const target = e.target;
+  // PORT: empezar conexión
+  if (target.classList && target.classList.contains('port')) {
+    const compId = target.dataset.compId;
+    const portKey = target.dataset.portKey;
+    const portKind = target.dataset.portKind;
+    // Solo se arrastra desde un puerto OUT (el origen es OUT, el destino IN)
+    // pero permitimos también arrastrar desde IN: lo invertimos al soltar
+    const c = getComp(compId);
+    if (!c) return;
+    const pp = portPos(c.type, portKey);
+    drag = {
+      kind: 'connect',
+      fromComp: compId,
+      fromPort: portKey,
+      fromKind: portKind,
+      origin: { x: c.x + pp.x, y: c.y + pp.y },
+      cur: clientToCanvas(e.clientX, e.clientY)
+    };
+    target.classList.add('connecting');
+    canvas.classList.add('connecting');
+    highlightCompatiblePorts(portKind, compId);
+    e.preventDefault();
     return;
   }
-  let totalQ = 0, totalW = 0, totalSgen = 0, totalXd = 0;
-  components.forEach(c => {
-    const def = COMP_DEFS[c.type];
-    const ins = {}, outs = {};
-    let allOk = true;
-    def.inputs.forEach(i => {
-      const id = c.ins[i.key]; if (!id) { allOk = false; return; }
-      const s = getStream(+id); if (!s || s.h==null || s.s==null || s.m==null) { allOk = false; return; }
-      ins[i.key] = s;
+  // COMP: mover
+  const compNode = target.closest('g.comp');
+  if (compNode) {
+    const id = compNode.dataset.compId;
+    const c = getComp(id);
+    if (!c) return;
+    const pt = clientToCanvas(e.clientX, e.clientY);
+    drag = { kind: 'comp', id, ox: pt.x - c.x, oy: pt.y - c.y, moved: false };
+    STATE.selection = { kind: 'comp', id };
+    compNode.classList.add('dragging');
+    renderAll();
+    e.preventDefault();
+    return;
+  }
+  // STREAM hit
+  const streamNode = target.closest('[data-stream-id]');
+  if (streamNode) {
+    const id = streamNode.dataset.streamId;
+    STATE.selection = { kind: 'stream', id };
+    renderAll();
+    e.preventDefault();
+    return;
+  }
+  // BACKGROUND: pan o deselect
+  if (e.button === 2 || e.button === 1 || keyState.space) {
+    drag = { kind: 'pan', startX: e.clientX, startY: e.clientY, panX0: STATE.view.panX, panY0: STATE.view.panY };
+    canvas.classList.add('panning');
+    e.preventDefault();
+    return;
+  }
+  // click vacío: deseleccionar
+  STATE.selection = null;
+  renderAll();
+}
+
+function onPointerMove(e) {
+  if (!drag) return;
+  if (drag.kind === 'comp') {
+    const pt = clientToCanvas(e.clientX, e.clientY);
+    const c = getComp(drag.id);
+    if (!c) return;
+    const newX = pt.x - drag.ox;
+    const newY = pt.y - drag.oy;
+    if (Math.abs(newX - c.x) > 0.4 || Math.abs(newY - c.y) > 0.4) drag.moved = true;
+    c.x = newX;
+    c.y = newY;
+    renderAll();
+  } else if (drag.kind === 'pan') {
+    const dx = (e.clientX - drag.startX);
+    const dy = (e.clientY - drag.startY);
+    // convertir delta de pixel a unidades del canvas
+    const rect = canvasWrap.getBoundingClientRect();
+    const scale = canvasViewBox.w / rect.width;
+    STATE.view.panX = drag.panX0 + dx * scale;
+    STATE.view.panY = drag.panY0 + dy * scale;
+    updateViewBox();
+  } else if (drag.kind === 'connect') {
+    drag.cur = clientToCanvas(e.clientX, e.clientY);
+    renderConnectPreview();
+  }
+}
+
+function onPointerUp(e) {
+  if (!drag) return;
+  if (drag.kind === 'comp') {
+    document.querySelectorAll('g.comp.dragging').forEach(g => g.classList.remove('dragging'));
+  } else if (drag.kind === 'pan') {
+    canvas.classList.remove('panning');
+  } else if (drag.kind === 'connect') {
+    canvas.classList.remove('connecting');
+    document.querySelectorAll('.port.connecting, .port.compatible, .port.incompatible').forEach(p => {
+      p.classList.remove('connecting', 'compatible', 'incompatible');
     });
-    def.outputs.forEach(o => {
-      const id = c.outs[o.key]; if (!id) { allOk = false; return; }
-      const s = getStream(+id); if (!s || s.h==null || s.s==null || s.m==null) { allOk = false; return; }
-      outs[o.key] = s;
-    });
-    const tr = document.createElement('tr');
-    if (!allOk) {
-      tr.innerHTML = `<td class="comp-name">${c.name}</td><td class="comp-type">${def.name}</td><td colspan="5" style="color:var(--t-3);font-style:italic">incompleto</td>`;
+    layerOverlay.innerHTML = '';
+    // ¿cayó sobre un puerto?
+    const targetPort = document.elementFromPoint(e.clientX, e.clientY);
+    if (targetPort && targetPort.classList && targetPort.classList.contains('port')) {
+      const toCompId = targetPort.dataset.compId;
+      const toPortKey = targetPort.dataset.portKey;
+      const toKind = targetPort.dataset.portKind;
+      // misma comp → cancelar
+      if (toCompId !== drag.fromComp) {
+        // determinar quién es from y quién es to (out → in)
+        let fc, fp, tc, tp;
+        if (drag.fromKind === 'out' && toKind === 'in') {
+          fc = drag.fromComp; fp = drag.fromPort; tc = toCompId; tp = toPortKey;
+          addStream(fc, fp, tc, tp);
+        } else if (drag.fromKind === 'in' && toKind === 'out') {
+          fc = toCompId; fp = toPortKey; tc = drag.fromComp; tp = drag.fromPort;
+          addStream(fc, fp, tc, tp);
+        } else {
+          toast('Conectá una salida (verde) con una entrada (azul)', 'warn');
+        }
+      }
+    }
+  }
+  drag = null;
+}
+
+function renderConnectPreview() {
+  if (!drag || drag.kind !== 'connect') return;
+  layerOverlay.innerHTML = '';
+  const x1 = drag.origin.x, y1 = drag.origin.y;
+  const x2 = drag.cur.x,   y2 = drag.cur.y;
+  const dx = Math.max(40, Math.abs(x2 - x1) * 0.5);
+  const c1x = x1 + (drag.fromKind === 'out' ? dx : -dx);
+  const c2x = x2 + (drag.fromKind === 'out' ? -dx : dx);
+  const d = `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
+  const path = svgEl('path', { class: 'connect-preview', d });
+  layerOverlay.appendChild(path);
+}
+
+function highlightCompatiblePorts(originKind, originCompId) {
+  // si origin es OUT, los compatibles son IN no conectados
+  // si origin es IN, los compatibles son OUT no conectados
+  const target = originKind === 'out' ? 'in' : 'out';
+  document.querySelectorAll('.port').forEach(p => {
+    const compId = p.dataset.compId;
+    const portKey = p.dataset.portKey;
+    const kind = p.dataset.portKind;
+    if (compId === originCompId) return;
+    if (kind === target) {
+      const occupied = target === 'in' ? !!streamToPort(compId, portKey) : !!streamFromPort(compId, portKey);
+      if (occupied) p.classList.add('incompatible');
+      else p.classList.add('compatible');
     } else {
-      const r = def.compute(ins, outs, c.params, env);
-      const Q = r.Q ?? 0, W = r.W ?? 0, dSg = r.dSg ?? 0, Xd = r.Xd ?? 0;
-      const eII = r.eta_II !== null && r.eta_II !== undefined && isFinite(r.eta_II) ? (r.eta_II * 100) : null;
-      tr.innerHTML = `<td class="comp-name">${c.name}</td><td class="comp-type">${def.name}</td>
-        <td class="${Q>0?'pos':(Q<0?'neg':'')}">${fmt(Q,2)}</td>
-        <td class="${W>0?'pos':(W<0?'neg':'')}">${fmt(W,2)}</td>
-        <td class="${dSg<-0.001?'neg':''}">${fmt(dSg,4)}</td>
-        <td>${fmt(Xd,2)}</td>
-        <td>${eII!==null?fmt(eII,1)+' %':'—'}</td>`;
-      totalQ += Q; totalW += W; totalSgen += dSg; totalXd += Xd;
+      p.classList.add('incompatible');
     }
-    tbody.appendChild(tr);
   });
-  // Total row
-  const total = document.createElement('tr');
-  total.className = 'total-row';
-  total.innerHTML = `<td>TOTAL</td><td></td>
-    <td>${fmt(totalQ,2)}</td><td>${fmt(totalW,2)}</td>
-    <td>${fmt(totalSgen,4)}</td><td>${fmt(totalXd,2)}</td><td></td>`;
-  tbody.appendChild(total);
+  // marcar el origen
+  const originPort = document.querySelector(`.port[data-comp-id="${originCompId}"][data-port-kind="${originKind}"][data-port-key="${drag.fromPort}"]`);
+  if (originPort) originPort.classList.add('connecting');
 }
 
-function computeGlobalEtaII() {
-  // Try to identify: which streams are pure inputs (no component produces them)
-  // and which are outputs (no component consumes them).
-  // For now, use simpler approach: η_II = (total work obtained + exergy gained by useful streams) / (exergy supplied)
-  // Conservative approach: sum positive ΔΨ̇ across components and divide by sum of |negative ΔΨ̇|
-
-  // Find streams that are component outputs but never inputs (process outputs)
-  // and inputs that are never outputs (process inputs)
-  const consumed = new Set();  // streams used as input by some component
-  const produced = new Set();  // streams produced by some component
-  components.forEach(c => {
-    Object.values(c.ins).forEach(id => { if (id) consumed.add(+id); });
-    Object.values(c.outs).forEach(id => { if (id) produced.add(+id); });
-  });
-  // Process inputs: produced is empty (or in consumed but not produced) → input streams from outside
-  let psiIn = 0, psiOut = 0;
-  streams.forEach(s => {
-    if (s.h == null || s.s == null || s.m == null) return;
-    const ex = computeStreamExergy(s);
-    if (consumed.has(s.id) && !produced.has(s.id)) {
-      psiIn += ex.Psi;  // entra al proceso
-    } else if (produced.has(s.id) && !consumed.has(s.id)) {
-      psiOut += ex.Psi;  // sale del proceso
-    }
-  });
-  // Add work and heat exergy contributions
-  let workOut = 0, workIn = 0;  // useful outputs / inputs
-  let qExergyIn = 0, qExergyOut = 0;
-  components.forEach(c => {
-    const def = COMP_DEFS[c.type];
-    const ins = {}, outs = {};
-    let allOk = true;
-    def.inputs.forEach(i => { const id = c.ins[i.key]; if (!id) { allOk = false; return; } const s = getStream(+id); if (!s||s.h==null||s.s==null||s.m==null){allOk=false;return;} ins[i.key]=s; });
-    def.outputs.forEach(o => { const id = c.outs[o.key]; if (!id) { allOk = false; return; } const s = getStream(+id); if (!s||s.h==null||s.s==null||s.m==null){allOk=false;return;} outs[o.key]=s; });
-    if (!allOk) return;
-    const r = def.compute(ins, outs, c.params, env);
-    if (r.W) {
-      if (r.W > 0) workOut += r.W;  // turbines
-      else workIn += -r.W;  // compressors / pumps
-    }
-    if (r.Q && r.T_F) {
-      const x = r.Q * (1 - env.T0 / r.T_F);
-      if (x > 0) qExergyIn += x;
-      else qExergyOut += -x;
-    }
-  });
-
-  // Useful output: W_obtenido + ΔΨ̇ del fluido si terminó con más exergía que entró + Q útil que sale a una T útil
-  const totalIn = psiIn + workIn + qExergyIn;
-  const totalOut = psiOut + workOut + qExergyOut;
-  // η_II = útil obtenido / suministrado
-  // Suministrado = totalIn (recursos), Obtenido = lo que sale como producto
-  // Approach: η_II = (workOut + (psiOut - psiIn) si > 0) / (workIn + qExergyIn + cualquier otra fuente)
-  // Simplified: η_II = totalOut / totalIn
-  let etaII = null;
-  if (totalIn > 0.001) etaII = totalOut / totalIn;
-
-  const el = document.getElementById('resEtaII');
-  if (etaII !== null && isFinite(etaII)) {
-    el.innerHTML = `${fmt(etaII*100,1)}<span class="unit">%</span>`;
-    el.className = 'r-tile-val ' + (etaII > 0.99 ? 'warn' : (etaII < 0 ? 'neg' : ''));
-    document.getElementById('resEtaIIextra').innerHTML = `Ψ̇ útil obtenido / Ψ̇ suministrado · entradas: ${fmt(totalIn,2)} kW · salidas: ${fmt(totalOut,2)} kW`;
-  } else {
-    el.innerHTML = `—<span class="unit">%</span>`;
-    el.className = 'r-tile-val';
-    document.getElementById('resEtaIIextra').textContent = 'Definí al menos una corriente de entrada y otra de salida del proceso';
+/* ════════════════════════════════════════════════════════════════
+   DRAG FROM PALETTE
+   ════════════════════════════════════════════════════════════════ */
+canvasWrap.addEventListener('dragover', (e) => {
+  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('text/plain')) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    canvasWrap.classList.add('dragover');
   }
-}
+});
+canvasWrap.addEventListener('dragleave', (e) => {
+  if (e.target === canvasWrap || !canvasWrap.contains(e.relatedTarget)) {
+    canvasWrap.classList.remove('dragover');
+  }
+});
+canvasWrap.addEventListener('drop', (e) => {
+  e.preventDefault();
+  canvasWrap.classList.remove('dragover');
+  const type = e.dataTransfer.getData('text/plain');
+  if (!type || !COMP_DEFS[type]) return;
+  const pt = clientToCanvas(e.clientX, e.clientY);
+  addComponent(type, pt.x, pt.y);
+});
 
-// ═══════════════════════════════════════════════════════════════════════
-//  DIAGRAM (simple flow diagram from components)
-// ═══════════════════════════════════════════════════════════════════════
-function drawDiagram() {
-  const svg = document.getElementById('diagSvg');
-  if (components.length === 0) {
-    svg.innerHTML = `<defs><marker id="diagAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker></defs><text x="350" y="150" text-anchor="middle" fill="var(--t-3)" font-family="Inter" font-size="14" font-style="italic">El diagrama se genera automáticamente cuando agregás componentes</text>`;
-    svg.setAttribute('viewBox', '0 0 700 300');
+/* ════════════════════════════════════════════════════════════════
+   ZOOM & PAN (wheel + buttons)
+   ════════════════════════════════════════════════════════════════ */
+canvasWrap.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = -e.deltaY * 0.0015;
+  const newZoom = clamp(STATE.view.zoom * (1 + delta), 0.3, 3);
+  // zoom centrado en el cursor
+  const before = clientToCanvas(e.clientX, e.clientY);
+  STATE.view.zoom = newZoom;
+  updateViewBox();
+  const after = clientToCanvas(e.clientX, e.clientY);
+  STATE.view.panX += (after.x - before.x);
+  STATE.view.panY += (after.y - before.y);
+  updateViewBox();
+  saveState();
+}, { passive: false });
+
+$('zoomInBtn').addEventListener('click', () => {
+  STATE.view.zoom = clamp(STATE.view.zoom * 1.2, 0.3, 3);
+  updateViewBox(); saveState();
+});
+$('zoomOutBtn').addEventListener('click', () => {
+  STATE.view.zoom = clamp(STATE.view.zoom / 1.2, 0.3, 3);
+  updateViewBox(); saveState();
+});
+$('zoomFitBtn').addEventListener('click', () => {
+  if (STATE.components.length === 0) {
+    STATE.view.zoom = 1; STATE.view.panX = 0; STATE.view.panY = 0;
+    updateViewBox(); saveState(); return;
+  }
+  // bounding box de todo
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  STATE.components.forEach(c => {
+    const { w, h } = compSize(c.type);
+    minX = Math.min(minX, c.x); minY = Math.min(minY, c.y);
+    maxX = Math.max(maxX, c.x + w); maxY = Math.max(maxY, c.y + h);
+  });
+  const pad = 80;
+  const bw = (maxX - minX) + pad * 2;
+  const bh = (maxY - minY) + pad * 2;
+  const rect = canvasWrap.getBoundingClientRect();
+  const aspect = rect.width / rect.height;
+  // base viewBox sin zoom: w = 720*aspect, h = 720
+  const baseW = 720 * aspect;
+  const baseH = 720;
+  const z = clamp(Math.min(baseW / bw, baseH / bh), 0.3, 2);
+  STATE.view.zoom = z;
+  // pan para centrar
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  STATE.view.panX = (baseW / z) / 2 - cx;
+  STATE.view.panY = (baseH / z) / 2 - cy;
+  updateViewBox(); saveState();
+});
+
+$('clearBtn').addEventListener('click', () => {
+  if (STATE.components.length === 0 && STATE.streams.length === 0) return;
+  if (!confirm('¿Vaciar el lienzo? Vas a perder todos los componentes y corrientes.')) return;
+  STATE.components = []; STATE.streams = []; STATE.selection = null;
+  STATE.nextStreamNum = 1; STATE.nextCompNum = {};
+  STATE.view = { zoom: 1, panX: 0, panY: 0 };
+  updateViewBox();
+  renderAll();
+  toast('Lienzo vacío', 'ok');
+});
+
+/* ════════════════════════════════════════════════════════════════
+   KEYBOARD
+   ════════════════════════════════════════════════════════════════ */
+const keyState = { space: false };
+window.addEventListener('keydown', (e) => {
+  // ignorar si estamos en un input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === ' ') { keyState.space = true; canvas.style.cursor = 'grab'; e.preventDefault(); }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && STATE.selection) {
+    if (STATE.selection.kind === 'comp') deleteComponent(STATE.selection.id);
+    else if (STATE.selection.kind === 'stream') deleteStream(STATE.selection.id);
+    e.preventDefault();
+  }
+  if (e.key === 'Escape') {
+    STATE.selection = null;
+    renderAll();
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.key === ' ') { keyState.space = false; canvas.style.cursor = ''; }
+});
+
+/* ════════════════════════════════════════════════════════════════
+   PROPS PANEL
+   ════════════════════════════════════════════════════════════════ */
+function renderProps() {
+  const body = $('propsBody');
+  if (!STATE.selection) {
+    body.innerHTML = `
+      <div class="props-empty">
+        <div class="props-empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div>Seleccioná un <strong>componente</strong> o una <strong>corriente</strong> en el lienzo para ver y editar sus propiedades acá.</div>
+      </div>`;
     return;
   }
+  if (STATE.selection.kind === 'comp') {
+    renderCompProps(getComp(STATE.selection.id));
+  } else {
+    renderStreamProps(getStream(STATE.selection.id));
+  }
+}
 
-  // Layout: components in a row
-  const W = 130, H = 80;
-  const gap = 60;
-  const totalW = components.length * W + (components.length - 1) * gap + 80;
-  const totalH = 220;
-  svg.setAttribute('viewBox', `0 0 ${Math.max(700, totalW)} ${totalH}`);
+function renderCompProps(c) {
+  if (!c) { STATE.selection = null; renderProps(); return; }
+  const def = COMP_DEFS[c.type];
+  const body = $('propsBody');
 
-  let html = `<defs>
-    <marker id="diagAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker>
-    <linearGradient id="cGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(240,132,61,0.18)"/><stop offset="100%" stop-color="rgba(240,132,61,0.06)"/></linearGradient>
-  </defs>`;
+  // ports panel
+  const ins = def.inputs.map(p => {
+    const s = streamToPort(c.id, p.key);
+    return `<div class="props-port-row"><span class="props-port-dot in"></span><span class="props-port-row-lbl">${p.label}</span>${s ? `<span class="props-port-row-stream">corr. ${s.num}</span>` : '<span class="props-port-row-stream empty">sin conexión</span>'}</div>`;
+  }).join('');
+  const outs = def.outputs.map(p => {
+    const s = streamFromPort(c.id, p.key);
+    return `<div class="props-port-row"><span class="props-port-dot out"></span><span class="props-port-row-lbl">${p.label}</span>${s ? `<span class="props-port-row-stream">corr. ${s.num}</span>` : '<span class="props-port-row-stream empty">sin conexión</span>'}</div>`;
+  }).join('');
 
-  const positions = {};
-  components.forEach((c, i) => {
-    const x = 40 + i * (W + gap);
-    const y = (totalH - H) / 2;
-    positions[c.id] = { x, y, w: W, h: H, cx: x + W/2, cy: y + H/2 };
-    const def = COMP_DEFS[c.type];
-    html += `<rect x="${x}" y="${y}" width="${W}" height="${H}" rx="10" fill="url(#cGrad)" stroke="var(--a)" stroke-width="1.5"/>`;
-    html += `<text x="${x+W/2}" y="${y+30}" text-anchor="middle" fill="var(--a-2)" font-family="Fraunces" font-size="14" font-weight="500">${c.name}</text>`;
-    html += `<text x="${x+W/2}" y="${y+50}" text-anchor="middle" fill="var(--t-3)" font-family="Inter" font-size="10" text-transform="uppercase">${def.name}</text>`;
-  });
+  // params
+  let paramsHtml = '';
+  if (def.params.length === 0) {
+    paramsHtml = '<div class="props-info">Este componente no tiene parámetros configurables. Sus relaciones quedan determinadas por las corrientes conectadas.</div>';
+  } else {
+    paramsHtml = def.params.map(p => `
+      <div class="props-row">
+        <div class="props-row-lbl">
+          ${p.label}
+          <span class="props-row-lbl-unit">${p.unit || ''}</span>
+        </div>
+        <input class="props-input" type="number"
+          step="${p.step || 'any'}" ${p.min !== undefined ? `min="${p.min}"` : ''} ${p.max !== undefined ? `max="${p.max}"` : ''}
+          value="${c.params[p.key] === '' || c.params[p.key] == null ? '' : c.params[p.key]}"
+          placeholder="${p.optional ? 'opcional' : ''}"
+          data-comp-id="${c.id}" data-param="${p.key}">
+        <span></span>
+      </div>`).join('');
+  }
 
-  // Stream connections: for each component, draw output streams as arrows
-  // Connect output of one to input of another if they share a stream id
-  const streamToComp = {};  // streamId → {producer:compId, consumer:compId}
-  components.forEach(c => {
-    Object.values(c.ins).forEach(id => {
-      if (!id) return;
-      streamToComp[+id] = streamToComp[+id] || {};
-      streamToComp[+id].consumer = c.id;
+  body.innerHTML = `
+    <div class="props-h">
+      <div class="props-h-info">
+        <div class="props-h-kind">Componente · ${def.short} ${c.num}</div>
+        <div class="props-h-name">${def.name}</div>
+      </div>
+      <div class="props-h-actions">
+        <button class="props-h-btn" id="propsDelBtn" title="Eliminar componente" aria-label="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="props-body">
+      <div class="props-section">
+        <div class="props-section-h">Parámetros</div>
+        ${paramsHtml}
+      </div>
+      <div class="props-section">
+        <div class="props-section-h">Puertos</div>
+        <div class="props-ports">
+          ${ins}${outs}
+        </div>
+      </div>
+      <div class="props-section">
+        <div class="props-section-h">Modelo</div>
+        <div class="props-info">${def.info}</div>
+      </div>
+    </div>
+  `;
+
+  body.querySelectorAll('.props-input').forEach(inp => {
+    inp.addEventListener('change', (e) => {
+      const id = e.target.dataset.compId;
+      const key = e.target.dataset.param;
+      const cmp = getComp(id);
+      if (!cmp) return;
+      cmp.params[key] = e.target.value === '' ? '' : (+e.target.value);
+      saveState();
     });
-    Object.values(c.outs).forEach(id => {
-      if (!id) return;
-      streamToComp[+id] = streamToComp[+id] || {};
-      streamToComp[+id].producer = c.id;
+  });
+  $('propsDelBtn').addEventListener('click', () => deleteComponent(c.id));
+}
+
+function renderStreamProps(s) {
+  if (!s) { STATE.selection = null; renderProps(); return; }
+  const cf = getComp(s.fromComp), ct = getComp(s.toComp);
+  const fdef = cf ? COMP_DEFS[cf.type] : null;
+  const tdef = ct ? COMP_DEFS[ct.type] : null;
+  const body = $('propsBody');
+
+  const fields = [
+    { key: 'T', sym: 'T',  label: 'Temperatura',     unit: 'K' },
+    { key: 'P', sym: 'P',  label: 'Presión',         unit: 'kPa' },
+    { key: 'h', sym: 'h',  label: 'Entalpía esp.',   unit: 'kJ/kg' },
+    { key: 's', sym: 's',  label: 'Entropía esp.',   unit: 'kJ/kg·K' },
+    { key: 'x', sym: 'x',  label: 'Título',          unit: '—' },
+    { key: 'm', sym: 'ṁ',  label: 'Caudal másico',   unit: 'kg/s' }
+  ];
+  const rows = fields.map(f => {
+    const val = s.props[f.key];
+    const mode = s.props.modes[f.key] || 'input';
+    return `
+      <div class="props-row">
+        <div class="props-row-lbl">
+          <span class="props-row-lbl-sym">${f.sym}</span>
+          <span>${f.label}</span>
+          <span class="props-row-lbl-unit">${f.unit}</span>
+        </div>
+        <input class="props-input ${mode === 'computed' ? 'computed' : ''}" type="number" step="any"
+          value="${val === '' || val == null ? '' : val}"
+          ${mode === 'computed' ? 'readonly' : ''}
+          placeholder="${mode === 'computed' ? '(se calcula)' : ''}"
+          data-stream-id="${s.id}" data-prop="${f.key}">
+        <button class="props-mode-btn ${mode === 'computed' ? 'computed' : ''}" data-stream-id="${s.id}" data-prop="${f.key}" title="${mode === 'computed' ? 'Marcar como ingresado' : 'Marcar como calculado por el solver'}" aria-label="Cambiar modo">
+          ${mode === 'computed'
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'}
+        </button>
+      </div>`;
+  }).join('');
+
+  const fromLbl = cf && fdef ? `${fdef.short} ${cf.num} · <span style="color:var(--t-3)">${fdef.outputs.find(p=>p.key===s.fromPort)?.label || ''}</span>` : '—';
+  const toLbl   = ct && tdef ? `${tdef.short} ${ct.num} · <span style="color:var(--t-3)">${tdef.inputs.find(p=>p.key===s.toPort)?.label || ''}</span>` : '—';
+
+  body.innerHTML = `
+    <div class="props-h">
+      <div class="props-h-info">
+        <div class="props-h-kind">Corriente</div>
+        <div class="props-h-name"><em>n.º ${s.num}</em></div>
+      </div>
+      <div class="props-h-actions">
+        <button class="props-h-btn" id="propsDelBtn" title="Eliminar corriente" aria-label="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="props-body">
+      <div class="props-section">
+        <div class="props-section-h">Trayecto</div>
+        <div class="props-ports">
+          <div class="props-port-row"><span class="props-port-dot out"></span><span class="props-port-row-lbl">Origen: ${fromLbl}</span></div>
+          <div class="props-port-row"><span class="props-port-dot in"></span><span class="props-port-row-lbl">Destino: ${toLbl}</span></div>
+        </div>
+      </div>
+      <div class="props-section">
+        <div class="props-section-h">Propiedades termodinámicas</div>
+        ${rows}
+      </div>
+      <div class="props-section">
+        <div class="props-section-h">Modo</div>
+        <div class="props-info">El ícono a la derecha alterna entre <strong>ingresado</strong> (lápiz, lo cargás vos) y <strong>calculado</strong> (mira, lo deduce el solver). En la fase 1 los valores se guardan pero todavía no se resuelven balances — eso lo agregamos en la fase 4.</div>
+      </div>
+    </div>
+  `;
+
+  body.querySelectorAll('.props-input').forEach(inp => {
+    inp.addEventListener('change', (e) => {
+      const id = e.target.dataset.streamId;
+      const key = e.target.dataset.prop;
+      const st = getStream(id);
+      if (!st) return;
+      st.props[key] = e.target.value === '' ? '' : (+e.target.value);
+      saveState();
     });
   });
-
-  Object.entries(streamToComp).forEach(([sid, link]) => {
-    if (link.producer && link.consumer) {
-      const a = positions[link.producer], b = positions[link.consumer];
-      if (a && b) {
-        const x1 = a.x + a.w, y1 = a.cy, x2 = b.x, y2 = b.cy;
-        html += `<line x1="${x1}" y1="${y1}" x2="${x2-4}" y2="${y2}" stroke="var(--info)" stroke-width="2" marker-end="url(#diagAr)" color="var(--info)"/>`;
-        html += `<text x="${(x1+x2)/2}" y="${y1-6}" text-anchor="middle" fill="var(--info)" font-family="JetBrains Mono" font-size="11">${sid}</text>`;
-      }
-    } else if (link.consumer && !link.producer) {
-      // Inlet to process
-      const b = positions[link.consumer];
-      if (b) {
-        const x2 = b.x, y2 = b.cy;
-        html += `<line x1="${x2-50}" y1="${y2}" x2="${x2-4}" y2="${y2}" stroke="var(--ok)" stroke-width="2" marker-end="url(#diagAr)" color="var(--ok)"/>`;
-        html += `<text x="${x2-30}" y="${y2-6}" text-anchor="middle" fill="var(--ok)" font-family="JetBrains Mono" font-size="11">${sid}</text>`;
-      }
-    } else if (link.producer && !link.consumer) {
-      // Outlet from process
-      const a = positions[link.producer];
-      if (a) {
-        const x1 = a.x + a.w, y1 = a.cy;
-        html += `<line x1="${x1}" y1="${y1}" x2="${x1+50}" y2="${y1}" stroke="var(--err)" stroke-width="2" marker-end="url(#diagAr)" color="var(--err)"/>`;
-        html += `<text x="${x1+25}" y="${y1-6}" text-anchor="middle" fill="var(--err)" font-family="JetBrains Mono" font-size="11">${sid}</text>`;
-      }
-    }
+  body.querySelectorAll('.props-mode-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = btn.dataset.streamId;
+      const key = btn.dataset.prop;
+      const st = getStream(id);
+      if (!st) return;
+      st.props.modes[key] = st.props.modes[key] === 'computed' ? 'input' : 'computed';
+      renderProps();
+      saveState();
+    });
   });
-
-  svg.innerHTML = html;
+  $('propsDelBtn').addEventListener('click', () => deleteStream(s.id));
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  EXAMPLE LOADER · Cengel Ex 7 turbina de vapor (Tabla A-6)
-// ═══════════════════════════════════════════════════════════════════════
-function loadExample() {
-  if (!confirm('Esto reemplaza las corrientes y componentes actuales. ¿Continuar?')) return;
-  // Cengel Cap. 8, Ej. 8-9 (turbina de vapor adiabática):
-  // Estado 1: 3 MPa, 450°C → h₁ = 3344.9 kJ/kg, s₁ = 7.0856 kJ/kgK
-  // Estado 2: 0.2 MPa, vapor saturado → h₂ = 2706.3 kJ/kg, s₂ = 7.1271 kJ/kgK
-  // ṁ = 8 kg/s
-  // T₀ = 25°C = 298.15 K (usaremos 300.15 para coincidir con env actual o 298.15)
-  document.getElementById('envT0').value = 298.15;
-  document.getElementById('envP0').value = 100;
-  document.getElementById('envH0').value = 104.83;  // h_f a 25°C
-  document.getElementById('envS0').value = 0.3672;  // s_f a 25°C
+/* ════════════════════════════════════════════════════════════════
+   RESIZE
+   ════════════════════════════════════════════════════════════════ */
+let resizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(updateViewBox, 80);
+});
 
-  streams = [
-    { id: 1, name: 'vapor sobrecal. (entrada turbina)', T: 723.15, P: 3000, h: 3344.9, s: 7.0856, x: null, m: 8 },
-    { id: 2, name: 'vapor sat. (salida turbina)', T: 393.36, P: 200, h: 2706.3, s: 7.1271, x: 1.0, m: 8 }
-  ];
-  nextStreamId = 3;
-  components = [
-    { id: 1, type: 'turbine', name: 'Turbina de vapor', ins: { in: 1 }, outs: { out: 2 }, params: { eta_iso: '', h_out_s: '' } }
-  ];
-  nextCompId = 2;
-  renderStreams();
-  renderComponents();
-  recalcAll();
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════════════════
-function init() {
-  loadTheme();
-  document.getElementById('envT0').addEventListener('input', recalcAll);
-  document.getElementById('envP0').addEventListener('input', recalcAll);
-  document.getElementById('envH0').addEventListener('input', recalcAll);
-  document.getElementById('envS0').addEventListener('input', recalcAll);
-  // Start with one example loaded
-  loadExampleSilent();
-}
-
-function loadExampleSilent() {
-  document.getElementById('envT0').value = 298.15;
-  document.getElementById('envP0').value = 100;
-  document.getElementById('envH0').value = 104.83;
-  document.getElementById('envS0').value = 0.3672;
-  streams = [
-    { id: 1, name: 'vapor sobrecal. (entrada turbina)', T: 723.15, P: 3000, h: 3344.9, s: 7.0856, x: null, m: 8 },
-    { id: 2, name: 'vapor sat. (salida turbina)', T: 393.36, P: 200, h: 2706.3, s: 7.1271, x: 1.0, m: 8 }
-  ];
-  nextStreamId = 3;
-  components = [
-    { id: 1, type: 'turbine', name: 'Turbina de vapor', ins: { in: 1 }, outs: { out: 2 }, params: { eta_iso: '', h_out_s: '' } }
-  ];
-  nextCompId = 2;
-  renderStreams();
-  renderComponents();
-  recalcAll();
-}
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+/* ════════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════════ */
+loadState();
+renderPalette();
+updateViewBox();
+renderAll();
 </script>
-
 </body>
 </html>
